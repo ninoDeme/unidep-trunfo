@@ -30,9 +30,32 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
   });
 
   fastify.post("/:modeloId", async (request, reply) => {
-    console.log(request.body);
-    throw new Error();
-  })
+    if (typeof request.body !== "object") {
+      return reply.status(400).send("Input Inválido");
+    }
+
+    let modelo = request.body as Modelo;
+
+    await fastify.db.run(
+      `UPDATE OR INSERT INTO modelo (id_modelo, nome) VALUES (?, ?) MATCHING (id_modelo)`,
+      [modelo.id_modelo, modelo.nome],
+    );
+
+    for (let atributo of modelo.atributos) {
+      await fastify.db.run(
+        `UPDATE OR INSERT INTO modelo_atributo (id_modelo_atributo, id_modelo, nome, ordem, tipo) VALUES (?, ?, ?, ?, ?) MATCHING (id_modelo_atributo)`,
+        [
+          atributo.id_modelo_atributo,
+          modelo.id_modelo,
+          atributo.nome,
+          atributo.ordem,
+          atributo.tipo,
+        ],
+      );
+    }
+
+    reply.send("ok");
+  });
 }
 
 export default routes;
