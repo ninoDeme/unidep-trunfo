@@ -5,7 +5,7 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
   fastify.get("/", async (_request, reply) => {
     const cartas = await fastify.db.all<CartaTrunfo[]>(`
         SELECT
-          c.id_atributo,
+          c.id_carta,
           c.nome,
           c.descricao,
           c.super_trunfo,

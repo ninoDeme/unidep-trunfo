@@ -5,7 +5,7 @@ export interface Modelo {
 }
 
 export interface ModeloAtributo {
-  id_atributo: number;
+  id_modelo_atributo: number;
   ordem: number;
   nome: string;
   tipo: number;

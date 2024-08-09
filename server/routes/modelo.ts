@@ -4,17 +4,17 @@ import { Modelo, ModeloAtributo } from "trunfo-lib/models/modelo";
 async function routes(fastify: FastifyInstance, _options: unknown) {
   fastify.get("/", async (_request, reply) => {
     const modelos = await fastify.db.all<Modelo[]>(`
-        SELECT
-          m.id_modelo,
-          m.nome
-        FROM modelo m
+      SELECT
+        m.id_modelo,
+        m.nome
+      FROM modelo m
     `);
 
     for (let modelo of modelos) {
       const atributos = await fastify.db.all<ModeloAtributo[]>(
         `
         SELECT
-          ma.id_atributo,
+          ma.id_modelo_atributo,
           ma.nome,
           ma.ordem,
           ma.tipo
@@ -28,6 +28,11 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
     }
     reply.send(modelos);
   });
+
+  fastify.post("/:modeloId", async (request, reply) => {
+    console.log(request.body);
+    throw new Error();
+  })
 }
 
 export default routes;

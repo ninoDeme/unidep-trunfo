@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import fastifySqlite from "fastify-sqlite-typed";
 import fs_promises from "fs/promises";
 import carta_routes from "./routes/carta";
+import modelo_routes from "./routes/modelo";
 
 (async () => {
   const app = Fastify({
@@ -10,7 +11,7 @@ import carta_routes from "./routes/carta";
 
   const schema = fs_promises.readFile("./base.sql", "utf8");
 
-  app.register(fastifySqlite, {
+  await app.register(fastifySqlite, {
     dbFilename: ":memory:",
     driverSettings: {
       verbose: true,
@@ -19,18 +20,19 @@ import carta_routes from "./routes/carta";
 
   app.db.exec(await schema);
 
-  app.get("/version", function (request, reply) {
+  app.get("/api/version", function (request, reply) {
     reply.send("0.0.1");
   });
 
-  app.register(carta_routes);
+  app.register(carta_routes, {prefix: '/api/carta'});
+  app.register(modelo_routes, {prefix: '/api/modelo'});
 
-  app.listen({ port: 3000 }, function (err, address) {
+
+  app.listen({ port: 3000 }, async function (err, address) {
     if (err) {
       app.log.error(err);
       process.exit(1);
     } else {
-      console.log(`Server listening on ${app.server.address()}`);
     }
   });
 })();
