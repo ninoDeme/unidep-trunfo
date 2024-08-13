@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color: theme('colors.gray.100');
+}
+
 body {
   background-color: theme('colors.gray.900');
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+}
+
+.input-trunfo {
+  background: rgba(100, 100, 100, .2);
+  border-bottom: 1px solid white
+}
+
+button[disabled] {
+  opacity: .6;
+}
+
+.icon-button {
+  transition: background 200ms;
+  border-radius: 100%;
+  height: auto;
+  align-self: center;
+  &:hover:not([disabled]) {
+    background: rgba(100, 100, 100, .2);
+  }
+  padding: 2px;
 }

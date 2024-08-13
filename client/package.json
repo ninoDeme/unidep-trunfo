@@ -13,9 +13,10 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.1.5",
+    "trunfo-lib": "file:../trunfo-lib",
     "vue": "^3.4.29",
-    "vue-router": "^4.3.3",
-    "trunfo-lib": "file:../trunfo-lib"
+    "vue-router": "^4.3.3"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",

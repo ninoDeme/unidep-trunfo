@@ -12,7 +12,18 @@ const router = createRouter({
     {
       path: '/criador',
       name: 'criador',
-      component: () => import('../views/Criador.vue')
+      children: [
+        {
+          path: 'modelo',
+          name: 'criador-modelo',
+          component: () => import ('../views/CriadorModelo.vue')
+        },
+        {
+          path: 'carta',
+          name: 'criador-carta',
+          component: () => import ('../views/CriadorCarta.vue')
+        }
+      ]
     }
   ]
 })
