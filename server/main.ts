@@ -4,6 +4,8 @@ import fs_promises from "fs/promises";
 import carta_routes from "./routes/carta";
 import modelo_routes from "./routes/modelo";
 import fastifyMultipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
+import path from "path";
 
 (async () => {
   const app = Fastify({
@@ -13,14 +15,22 @@ import fastifyMultipart from "@fastify/multipart";
   const schema = fs_promises.readFile("./base.sql", "utf8");
 
   await app.register(fastifyMultipart, {
-    logLevel: 'info'
-  })
+    logLevel: "info",
+    limits: {
+      fileSize: 100000000,
+    },
+  });
 
   await app.register(fastifySqlite, {
     dbFilename: "testes.db",
     driverSettings: {
       verbose: true,
     },
+  });
+
+  await app.register(fastifyStatic, {
+    root: path.join(__dirname, "uploads"),
+    prefix: "/uploads/",
   });
 
   // app.db.exec(await schema);

@@ -55,22 +55,28 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
         modelo.cor_fundo,
         modelo.cor_texto,
         modelo.cor_atributo_fundo,
-        modelo.cor_atributo_texto
+        modelo.cor_atributo_texto,
       ],
     );
 
-    await fastify.db.run(`
-      DELETE FROM carta_atributo ca
+    await fastify.db.run(
+      `
+      DELETE FROM carta_atributo as ca
       WHERE ? in (SELECT id_modelo FROM carta JOIN modelo USING(id_modelo) WHERE id_carta = ca.id_carta)
           AND id_modelo_atributo not in (?)
-    `, [
-      modelo.id_modelo,
-      modelo.atributos.map(attr => attr.id_modelo_atributo)
-    ])
-    await fastify.db.run(`DELETE FROM modelo_atributo WHERE id_modelo = ? AND id_modelo_atributo not in (?)`, [
-      modelo.id_modelo,
-      modelo.atributos.map(attr => attr.id_modelo_atributo)
-    ])
+    `,
+      [
+        modelo.id_modelo,
+        modelo.atributos.map((attr) => attr.id_modelo_atributo),
+      ],
+    );
+    await fastify.db.run(
+      `DELETE FROM modelo_atributo WHERE id_modelo = ? AND id_modelo_atributo not in (?)`,
+      [
+        modelo.id_modelo,
+        modelo.atributos.map((attr) => attr.id_modelo_atributo),
+      ],
+    );
 
     for (let atributo of modelo.atributos) {
       await fastify.db.run(

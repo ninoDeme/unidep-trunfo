@@ -10,10 +10,10 @@ const carta = defineModel<CartaTrunfo>({
 
 defineProps<{ modelo: Modelo }>()
 
-const file = ref<File | null>(null);
+const file = ref<File | null>(null)
 
 function setImg(input: File) {
-  file.value = input;
+  file.value = input
   carta.value.img = URL.createObjectURL(input)
 }
 
@@ -41,31 +41,39 @@ async function salvar() {
     //   throw new Error('Erro ao salvar a carta')
     // }
     let formData = new FormData()
+    formData.append(
+      'carta',
+      JSON.stringify({
+        ...carta.value,
+        img: undefined
+      })
+    )
     if (file.value) {
       formData.append('img', file.value)
-      formData.append(
-        'carta',
-        JSON.stringify({
-          ...carta.value,
-          img: undefined
-        })
-      )
     }
 
-    await new Promise<void>((resolve, reject) => {
-      let request = new XMLHttpRequest()
-      request.open('POST', `/api/carta/${carta.value.id_carta}`)
-      request.onreadystatechange = function () {
-        if (request.readyState === 4) {
-          if (request.status === 200 && request.statusText === 'OK') {
-            resolve()
-          } else {
-            reject(new Error(request.statusText))
-          }
-        }
-      }
-      request.send(formData)
+    let res = await fetch(`/api/carta/${carta.value.id_carta}`, {
+      method: 'POST',
+      body: formData
     })
+    if (!res.ok) {
+      throw new Error('Erro ao salvar a carta')
+    }
+
+    // await new Promise<void>((resolve, reject) => {
+    //   let request = new XMLHttpRequest()
+    //   request.open('POST', `/api/carta/${carta.value.id_carta}`)
+    //   request.onreadystatechange = function () {
+    //     if (request.readyState === 4) {
+    //       if (request.status === 200 && request.statusText === 'OK') {
+    //         resolve()
+    //       } else {
+    //         reject(new Error(request.statusText))
+    //       }
+    //     }
+    //   }
+    //   request.send(formData)
+    // })
     emit('salvar', carta.value)
   } catch (e) {
     console.error(e)

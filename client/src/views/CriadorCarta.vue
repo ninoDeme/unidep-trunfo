@@ -19,8 +19,8 @@ const modeloPreview = computed(() => {
 const { loadingCartas, cartas, getCartas } = useCartas()
 
 const cartasModeloAtual = computed(() => {
-  return modeloEditando && cartas.value
-    ? [...cartas.value.values()].filter((c) => c.id_modelo === modeloEditando.value?.id_modelo)
+  return modeloEditando.value && cartas.value
+    ? [...cartas.value.values()].filter((c) => c.id_modelo === modeloEditando.value!.id_modelo)
     : null
 })
 
@@ -61,7 +61,12 @@ const cartaPreview = computed(() => {
         :modelo="modeloEditando"
         v-model="cartaEditando"
         @cancelar="cartaEditando = null"
-        @salvar="cartaEditando = null; getCartas()"
+        @salvar="
+          () => {
+            cartaEditando = null
+            getCartas()
+          }
+        "
       />
     </div>
     <div class="bg-gray-400 flex-1 flex items-center justify-center">

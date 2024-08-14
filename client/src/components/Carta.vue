@@ -11,7 +11,7 @@ defineProps<{ modelo: Modelo, carta?: CartaTrunfo }>()
       :style="{ backgroundColor: modelo.cor_fundo, color: modelo.cor_texto }"
     >
       <div class="w-full text-3xl p-2">{{ carta?.nome ?? 'Nome da carta' }}</div>
-      <img v-if="carta" class="aspect-video bg-gray-500 border-white border-b-[4px] border-t-[4px] object-cover w-full" :src="carta?.img ?? `./upload/cartas/carta-${carta?.id_carta}.webp`" />
+      <img v-if="carta" class="aspect-video bg-gray-500 border-white border-b-[4px] border-t-[4px] object-cover w-full" :src="carta?.img ?? `/uploads/carta/carta-${carta?.id_carta}.webp`" />
       <img v-else class="aspect-video bg-gray-500 border-white border-b-[4px] border-t-[4px] w-full" />
       <div class="m-8 mb-3">
         <div

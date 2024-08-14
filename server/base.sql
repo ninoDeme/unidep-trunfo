@@ -20,7 +20,6 @@ CREATE TABLE carta (
   id_carta INTEGER PRIMARY KEY,
   nome TEXT NOT NULL,
   descricao TEXT,
-  img TEXT NOT NULL,
   super_trunfo INTEGER DEFAULT 0,
   id_modelo INTEGER NOT NULL,
   FOREIGN KEY(id_modelo) REFERENCES modelo(id_modelo)
