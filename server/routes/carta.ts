@@ -48,10 +48,10 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
           ca.a,
           ma.tipo
         FROM carta_atributo ca
-          JOIN modelo_atributo ma using(id_modelo_atributo)
+          JOIN modelo_atributo ma ON ca.id_modelo_atributo = ma.id_modelo_atributo AND id_modelo = ?
         WHERE id_carta = ?
       `,
-        [carta.id_carta],
+        [carta.id_modelo, carta.id_carta],
       );
 
       for (let atributo of atributos) {
@@ -83,9 +83,13 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
       ],
     );
 
+    await fastify.db.run(`DELETE FROM carta_atributo WHERE id_carta = ?`, [
+      carta.id_carta,
+    ]);
+
     for (let atributo of carta.atributos) {
       await fastify.db.run(
-        `INSERT OR REPLACE INTO carta_atributo (id_modelo_atributo, id_carta, valor, a) VALUES (?, ?, ?, ?)`,
+        `INSERT INTO carta_atributo (id_modelo_atributo, id_carta, valor, a) VALUES (?, ?, ?, ?)`,
         [
           atributo.id_modelo_atributo,
           carta.id_carta,
@@ -133,9 +137,12 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
           "-",
         ]);
         await pipeline(part.file, p.stdin!);
+        console.log(
+          `Salvando => ./uploads/carta/carta-${request.params.id_carta}.webp`,
+        );
       } else if (part.fieldname === "carta" && part.type === "field") {
         let carta = JSON.parse(part.value as string) as CartaTrunfo;
-        insertCarta(carta);
+        await insertCarta(carta);
       }
     }
     reply.send("ok");
