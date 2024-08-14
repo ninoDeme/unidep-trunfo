@@ -3,14 +3,26 @@ import type { Modelo } from 'trunfo-lib/models/modelo'
 import { PencilIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import type { CartaTrunfo } from 'trunfo-lib/models/carta'
 import Carta from '@/components/Carta.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const W_CARTA = 170
 
-defineProps<{
-  modeloEditando: Modelo
+const props = defineProps<{
+  modeloEditando?: Modelo
+  modelos: Map<number, Modelo>
   cartas: CartaTrunfo[]
+  mostraNovaCarta?: boolean
 }>()
+
+const cartasFiltradas = computed(() => {
+  if (props.modeloEditando == null) {
+    return props.cartas.map((c) => ({ carta: c, modelo: props.modelos.get(c.id_modelo)! }))
+  }
+
+  return props.cartas
+    .filter((c) => c.id_modelo === props.modeloEditando!.id_modelo)
+    .map((c) => ({ carta: c, modelo: props.modeloEditando! }))
+})
 
 const hoverEl = ref(-1)
 
@@ -23,7 +35,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="flex flex-row flex-wrap justify-start gap-5 p-4" v-if="modeloEditando">
-    <div :style="{ height: `${(W_CARTA / 500) * 750}px`, width: `${W_CARTA}px` }" class="relative">
+    <div :style="{ height: `${(W_CARTA / 500) * 750}px`, width: `${W_CARTA}px` }" class="relative" v-if="mostraNovaCarta">
       <button
         type="button"
         @click="emit('novoCarta')"
@@ -40,7 +52,7 @@ const emit = defineEmits<{
       ></Carta>
     </div>
     <div
-      v-for="(carta, index) in cartas"
+      v-for="({carta, modelo}, index) in cartasFiltradas"
       :style="{ height: `${(W_CARTA / 500) * 750}px`, width: `${W_CARTA}px` }"
       class="relative"
     >
@@ -55,7 +67,7 @@ const emit = defineEmits<{
       </button>
       <Carta
         :style="{ transform: `scale3d(${W_CARTA / 500}, ${W_CARTA / 500}, 1)` }"
-        :modelo="modeloEditando"
+        :modelo="modelo"
         :carta="carta"
         class="origin-top-left"
       ></Carta>

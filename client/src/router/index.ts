@@ -16,14 +16,22 @@ const router = createRouter({
         {
           path: 'modelo',
           name: 'criador-modelo',
-          component: () => import ('../views/CriadorModelo.vue')
+          component: () => import('../views/CriadorModelo.vue')
         },
         {
           path: 'carta',
           name: 'criador-carta',
-          component: () => import ('../views/CriadorCarta.vue')
-        }
+          component: () => import('../views/CriadorCarta.vue')
+        },
+        {
+          path: '',
+          redirect: '/'
+        },
       ]
+    },
+    {
+      path: '/:catchAll(.*)*',
+      redirect: '/'
     }
   ]
 })

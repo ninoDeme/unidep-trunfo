@@ -18,12 +18,6 @@ const modeloPreview = computed(() => {
 })
 const { loadingCartas, cartas, getCartas } = useCartas()
 
-const cartasModeloAtual = computed(() => {
-  return modeloEditando.value && cartas.value
-    ? [...cartas.value.values()].filter((c) => c.id_modelo === modeloEditando.value!.id_modelo)
-    : null
-})
-
 const cartaEditando = ref<null | CartaTrunfo>(null)
 const cartaHover = ref<null | CartaTrunfo>(null)
 
@@ -43,10 +37,12 @@ const cartaPreview = computed(() => {
       </select>
       <div v-if="loadingModelos || loadingCartas" class="m-6">Carregando</div>
       <ListaCartas
-        v-if="cartasModeloAtual && modeloEditando"
+        v-if="modeloEditando && modelos && cartas"
         v-show="!cartaEditando"
         :modelo-editando="modeloEditando"
-        :cartas="cartasModeloAtual"
+        :modelos="modelos"
+        :cartas="[...cartas.values()]"
+        mostra-nova-carta
         @novo-carta="() => (cartaEditando = novaCarta(modeloEditando!))"
         @selecionar-carta="
           (event) => {
