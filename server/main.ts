@@ -6,13 +6,23 @@ import modelo_routes from "./routes/modelo";
 import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import path from "path";
+import { existsSync } from "fs";
 
 (async () => {
   const app = Fastify({
-    logger: true,
+    logger: {
+      transport: {
+        target: "@fastify/one-line-logger",
+      },
+    },
   });
 
-  const schema = fs_promises.readFile("./base.sql", "utf8");
+
+  let schema: Promise<string> | null = null
+
+  if (!existsSync("./testes.db")) {
+    schema = fs_promises.readFile("./base.sql", "utf8");
+  }
 
   await app.register(fastifyMultipart, {
     logLevel: "info",
@@ -28,12 +38,15 @@ import path from "path";
     },
   });
 
+  if (schema) {
+    app.db.exec(await schema);
+  }
+
   await app.register(fastifyStatic, {
     root: path.join(__dirname, "uploads"),
     prefix: "/uploads/",
+    decorateReply: false,
   });
-
-  // app.db.exec(await schema);
 
   app.get("/api/version", function (request, reply) {
     reply.send("0.0.1");
@@ -41,6 +54,16 @@ import path from "path";
 
   app.register(carta_routes, { prefix: "/api/carta" });
   app.register(modelo_routes, { prefix: "/api/modelo" });
+
+  await app.register(fastifyStatic, {
+    root: path.join(__dirname, "..", "client", "dist"),
+    index: "index.html",
+    decorateReply: true,
+  });
+
+  app.setNotFoundHandler(function (request, reply) {
+    reply.sendFile("index.html");
+  });
 
   app.listen({ port: 3000 }, async function (err, address) {
     if (err) {

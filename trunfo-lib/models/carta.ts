@@ -1,4 +1,4 @@
-import { Modelo, ModeloAtributo } from "./modelo";
+import type { Modelo, ModeloAtributo } from "./modelo";
 
 export function gerarIdCarta(): number {
   return Math.floor(Math.random() * 999980) + 10;
