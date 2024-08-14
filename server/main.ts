@@ -4,6 +4,7 @@ import fs_promises from "fs/promises";
 import carta_routes from "./routes/carta";
 import modelo_routes from "./routes/modelo";
 import fastifyMultipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
 import path from "path";
 import { existsSync } from "fs";
 import { env } from "process";
@@ -42,14 +43,11 @@ import { env } from "process";
     app.db.exec(await schema);
   }
 
-  if (env.NODE_ENV !== 'production') {
-    let fastifyStatic = require('@fastify/static');
-    await app.register(fastifyStatic, {
-      root: path.join(__dirname, "uploads"),
-      prefix: "/uploads/",
-      decorateReply: true,
-    });
-  }
+  await app.register(fastifyStatic, {
+    root: path.join(__dirname, "uploads"),
+    prefix: "/uploads/",
+    decorateReply: true,
+  });
 
   app.get("/api/version", function (request, reply) {
     reply.send("0.0.1");
