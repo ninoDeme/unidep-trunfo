@@ -45,7 +45,7 @@ import { existsSync } from "fs";
   await app.register(fastifyStatic, {
     root: path.join(__dirname, "uploads"),
     prefix: "/uploads/",
-    decorateReply: false,
+    decorateReply: true,
   });
 
   app.get("/api/version", function (request, reply) {
@@ -54,16 +54,6 @@ import { existsSync } from "fs";
 
   app.register(carta_routes, { prefix: "/api/carta" });
   app.register(modelo_routes, { prefix: "/api/modelo" });
-
-  await app.register(fastifyStatic, {
-    root: path.join(__dirname, "..", "client", "dist"),
-    index: "index.html",
-    decorateReply: true,
-  });
-
-  app.setNotFoundHandler(function (request, reply) {
-    reply.sendFile("index.html");
-  });
 
   app.listen({ port: 3000 }, async function (err, address) {
     if (err) {
