@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Conectar from '../views/Conectar.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,7 +7,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: Conectar
     },
     {
       path: '/criador',
@@ -25,7 +25,7 @@ const router = createRouter({
         },
         {
           path: '',
-          redirect: '/'
+          redirect: '/criador/modelo'
         },
       ]
     },
