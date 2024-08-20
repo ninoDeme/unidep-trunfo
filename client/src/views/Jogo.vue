@@ -1,5 +1,8 @@
 <script setup lang="ts">
-let useJogo 
+import { useJogo } from '@/providers/jogo';
+
+let jogo = useJogo('nome da sala');
+
 </script>
 
 <template>
