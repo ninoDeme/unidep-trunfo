@@ -2,11 +2,12 @@ import { FastifyInstance } from "fastify";
 import { CartaTrunfo, CartaTrunfoAtributo } from "trunfo-lib/models/carta";
 import { pipeline } from "stream/promises";
 import cp from "child_process";
-import fs from "fs/promises";
+import fs_p from "fs/promises";
+import fs from "fs";
 import path from "path";
 
 export async function limpaImagens(fastify: FastifyInstance) {
-  const contents = await fs.readdir(path.join("uploads", "carta"));
+  const contents = await fs_p.readdir(path.join("uploads", "carta"));
   if (!contents.length) return;
 
   const cartas = await fastify.db.all<{ id_carta: string }[]>(`
@@ -20,7 +21,7 @@ export async function limpaImagens(fastify: FastifyInstance) {
     if (!id_carta_aquivo) continue;
 
     if (!cartas.some((c) => c.id_carta == id_carta_aquivo)) {
-      fs.unlink(path.join("uploads", "carta", file));
+      fs_p.unlink(path.join("uploads", "carta", file));
     }
   }
 }
@@ -125,6 +126,9 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
     const data = request.parts();
     for await (const part of data) {
       if (part.fieldname === "img" && part.type === "file") {
+        if (!fs.existsSync(`./uploads/carta/`)){
+            fs.mkdirSync(`./uploads/carta/`);
+        }
         let p = cp.execFile("cwebp", [
           "-q",
           "80",

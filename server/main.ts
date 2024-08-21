@@ -28,7 +28,7 @@ import { env } from "process";
   await app.register(fastifyMultipart, {
     logLevel: "info",
     limits: {
-      fileSize: 100000000,
+      fileSize: 1000000000,
     },
   });
 
