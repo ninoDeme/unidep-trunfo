@@ -35,7 +35,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="flex flex-row flex-wrap justify-start gap-5 p-4" v-if="modeloEditando">
-    <div :style="{ height: `${(W_CARTA / 500) * 750}px`, width: `${W_CARTA}px` }" class="relative" v-if="mostraNovaCarta">
+    <div class="relative" v-if="mostraNovaCarta">
       <button
         type="button"
         @click="emit('novoCarta')"
@@ -46,14 +46,13 @@ const emit = defineEmits<{
         <PlusIcon class="icon" />
       </button>
       <Carta
-        :style="{ transform: `scale3d(${W_CARTA / 500}, ${W_CARTA / 500}, 1)` }"
+        :width="W_CARTA"
         :modelo="modeloEditando"
-        class="origin-top-left saturate-50 blur-sm"
+        class="saturate-50 blur-[1px]"
       ></Carta>
     </div>
     <div
       v-for="({carta, modelo}, index) in cartasFiltradas"
-      :style="{ height: `${(W_CARTA / 500) * 750}px`, width: `${W_CARTA}px` }"
       class="relative"
     >
       <button
@@ -66,10 +65,10 @@ const emit = defineEmits<{
         <PencilIcon class="icon" />
       </button>
       <Carta
-        :style="{ transform: `scale3d(${W_CARTA / 500}, ${W_CARTA / 500}, 1)` }"
+        :width="W_CARTA"
         :modelo="modelo"
         :carta="carta"
-        class="origin-top-left"
+        class="hover:saturate-50 hover:blur-[1px]"
       ></Carta>
     </div>
   </div>

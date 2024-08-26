@@ -20,7 +20,7 @@ body {
   border-bottom: 1px solid white
 }
 
-button[disabled] {
+button[disabled]:not(.not-opacity-disabled) {
   opacity: .6;
 }
 

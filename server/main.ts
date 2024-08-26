@@ -7,7 +7,6 @@ import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import path from "path";
 import { existsSync } from "fs";
-import { env } from "process";
 
 (async () => {
   const app = Fastify({

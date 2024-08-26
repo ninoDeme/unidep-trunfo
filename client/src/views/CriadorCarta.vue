@@ -31,6 +31,7 @@ const cartaPreview = computed(() => {
     <div class="w-[600px] text-2xl flex flex-col text-white">
       <CriadorToolbar />
       <select v-model="modeloEditando" class="input-trunfo m-6 p-1" :disabled="!!cartaEditando">
+        <option selected hidden disabled :value="null">selecione um modelo...</option>
         <option v-for="[_, modelo] in modelos" :key="modelo.id_modelo" :value="modelo">
           {{ modelo.nome }}
         </option>

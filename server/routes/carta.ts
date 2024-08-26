@@ -140,6 +140,7 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
           "--",
           "-",
         ]);
+
         await pipeline(part.file, p.stdin!);
         console.log(
           `Salvando => ./uploads/carta/carta-${request.params.id_carta}.webp`,

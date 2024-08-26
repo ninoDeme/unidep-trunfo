@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Conectar from '../views/Conectar.vue'
+import Jogo from '@/views/Jogo.vue'
+import CriarPartida from '@/views/CriarPartida.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,6 +10,16 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: Conectar
+    },
+    {
+      path: '/criar-partida',
+      name: 'criar-partida',
+      component: CriarPartida
+    },
+    {
+      path: '/jogo/:nomesala',
+      name: 'jogo',
+      component: Jogo
     },
     {
       path: '/criador',
@@ -25,6 +37,7 @@ const router = createRouter({
         },
         {
           path: '',
+          name: '',
           redirect: '/criador/modelo'
         },
       ]
