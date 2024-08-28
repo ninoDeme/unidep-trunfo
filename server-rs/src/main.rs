@@ -1,28 +1,17 @@
 use std::io;
 
-use actix_web::{middleware, web, App, Error as AWError, HttpResponse, HttpServer, Responder};
+use actix_web::{middleware, web, App, HttpServer, Responder};
 use r2d2_sqlite::SqliteConnectionManager;
+use futures_util::stream::StreamExt;
 
+use actix_form_data::{Error, Field, Form, Value};
 mod db;
-pub mod modelo;
-pub mod carta;
-use db::{Pool, post_modelo_query, get_all_modelos_query};
-use modelo::{Modelo, ModeloAtributo};
+mod modelo;
+mod carta;
+use modelo::{get_all_modelos, post_modelo};
+use carta::{get_all_cartas, post_carta};
+use db::{Pool};
 
-async fn post_modelo(db: web::Data<Pool>, json: web::Json<Modelo>) -> Result<HttpResponse, AWError> {
-    let result = post_modelo_query(&db, json).await;
-
-    Ok(HttpResponse::Ok().json(result.map_err(AWError::from)?))
-}
-
-async fn get_all_modelos(db: web::Data<Pool>) -> Result<HttpResponse, AWError> {
-    let result = get_all_modelos_query(&db).await;
-
-    Ok(HttpResponse::Ok().json(result.map_err(AWError::from)?))
-}
-
-/// Version 2: Calls 4 queries in parallel, as an asynchronous handler
-/// Returning Error types turn into None values in the response
 // async fn parallel_weather(db: web::Data<Pool>) -> Result<HttpResponse, AWError> {
 //     let fut_result = vec![
 //         db::execute(&db, Queries::GetTopTenHottestYears),
@@ -44,10 +33,25 @@ async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     // connect to SQLite DB
-    let manager = SqliteConnectionManager::file("banco.db");
+    let manager = SqliteConnectionManager::file("banco.db").with_init(|db| {
+        rusqlite::vtab::array::load_module(&db)?;
+        Ok(())
+    });
     let pool = Pool::new(manager).unwrap();
 
     log::info!("starting HTTP server at http://localhost:3030");
+
+    let carta_form = Form::new()
+        .field("carta", Field::text())
+        .field(
+            "img",
+            Field::file(|_, _, mut stream| async move {
+                while let Some(_) = stream.next().await {
+                    // do something
+                }
+                Ok(()) as Result<(), Error>
+            }),
+        );
 
     // start HTTP server
     HttpServer::new(move || {
@@ -60,9 +64,11 @@ async fn main() -> io::Result<()> {
                     .route("/version", web::get().to(version))
                     .route("/modelo", web::get().to(get_all_modelos))
                     .route("/modelo", web::post().to(post_modelo))
+                    .route("/carta", web::get().to(get_all_cartas))
+                    .route("/carta", web::post().wrap(carta_form.clone()).to(post_carta))
             )
     })
-    .bind(("127.0.0.1", 3030))?
+    .bind(("127.0.0.1", 3000))?
     .workers(2)
     .run()
     .await
