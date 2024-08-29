@@ -1,6 +1,18 @@
 use serde::{Deserialize, Serialize};
 use crate::db::{get_conn, Pool};
-use actix_web::{error, web, Error, HttpResponse};
+use actix_web::{error, web, Error, HttpResponse, HttpRequest};
+use actix_multipart::form::{json::Json as MPJson, text::Text as MPText, tempfile::TempFile, bytes::Bytes as MPBytes, MultipartForm, Limits, FieldReader};
+use actix_multipart::Field;
+use actix_multipart::MultipartError;
+
+use futures_util::future::LocalBoxFuture;
+use futures_util::TryStreamExt as _;
+// use mime::Mime;
+
+
+use tokio::process::{Command};
+use std::process::Stdio;
+use tokio::io::AsyncWriteExt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CartaTrunfo {
@@ -23,8 +35,66 @@ pub struct CartaTrunfoAtributo {
   a: bool
 }
 
-pub async fn post_carta(db: web::Data<Pool>, value: actix_form_data::Value<()>) -> Result<HttpResponse, Error> {
-    let result = post_carta_query(&db, value).await;
+#[derive(Debug)]
+struct WebpImg {
+    size: usize,
+    name: String
+}
+
+impl<'t> FieldReader<'t> for WebpImg {
+    type Future = LocalBoxFuture<'t, Result<Self, MultipartError>>;
+
+    fn read_field(req: &'t HttpRequest, mut field: Field, limits: &'t mut Limits) -> Self::Future {
+        Box::pin(async move {
+
+            let id_carta = req.match_info().get("id_carta").unwrap();
+
+            let mut child = Command::new("cwebp")
+                .arg("-q")
+                .arg("80")
+                .arg("-resize")
+                .arg("1000")
+                .arg("0")
+                .arg("-o")
+                .arg(format!("./uploads/carta/carta-{}.webp", id_carta))
+                .arg("--")
+                .arg("-")
+                .stdin(Stdio::piped())
+                .stdout(Stdio::null())
+                .spawn()
+                .expect("Failed to launch cwebp");
+                    
+            let mut stdin = child.stdin.take().expect("Failed to open stdin");
+
+            let mut size = 0;
+            while let Some(chunk) = field.try_next().await? {
+                limits.try_consume_limits(chunk.len(), false)?;
+                stdin.write_all(chunk.as_ref()).await.unwrap();
+                size += chunk.len();
+            }
+            drop(stdin);
+
+            child.wait().await.unwrap();
+
+            println!("{}", size);
+            Ok(WebpImg {
+                size,
+                name: format!("./uploads/carta/carta-{}.webp", id_carta)
+            })
+        })
+    }
+}
+
+
+#[derive(Debug, MultipartForm)]
+pub struct CartaForm {
+    carta: MPText<String>,
+    img: WebpImg
+}
+
+pub async fn post_carta(db: web::Data<Pool>, MultipartForm(form): MultipartForm<CartaForm>) -> Result<HttpResponse, Error> {
+    println!("{:?}", form);
+    let result = post_carta_query(&db).await;
 
     Ok(HttpResponse::Ok().json(result.map_err(Error::from)?))
 }
@@ -93,15 +163,9 @@ async fn get_all_cartas_query(pool: &Pool) -> Result<Vec<CartaTrunfo>, Error> {
         .map_err(error::ErrorInternalServerError)
 }
 
-async fn post_carta_query(pool: &Pool, value: actix_form_data::Value<()>) -> Result<(), Error> {
+async fn post_carta_query(pool: &Pool) -> Result<(), Error> {
 
-    println!("{:?}", value);
-    match value {
-        actix_form_data::Value::Text(json) => {
-            let carta: CartaTrunfo = serde_json::from_str(json.as_str()).map_err(error::ErrorInternalServerError)?;
-        },
-        _ => {}
-    }
+    // println!("{:?}", value);
 
     // let conn = get_conn(pool).await?;
     // web::block(move || {

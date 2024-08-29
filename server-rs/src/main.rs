@@ -2,9 +2,7 @@ use std::io;
 
 use actix_web::{middleware, web, App, HttpServer, Responder};
 use r2d2_sqlite::SqliteConnectionManager;
-use futures_util::stream::StreamExt;
 
-use actix_form_data::{Error, Field, Form, Value};
 mod db;
 mod modelo;
 mod carta;
@@ -41,18 +39,6 @@ async fn main() -> io::Result<()> {
 
     log::info!("starting HTTP server at http://localhost:3030");
 
-    let carta_form = Form::new()
-        .field("carta", Field::text())
-        .field(
-            "img",
-            Field::file(|_, _, mut stream| async move {
-                while let Some(_) = stream.next().await {
-                    // do something
-                }
-                Ok(()) as Result<(), Error>
-            }),
-        );
-
     // start HTTP server
     HttpServer::new(move || {
         App::new()
@@ -65,7 +51,7 @@ async fn main() -> io::Result<()> {
                     .route("/modelo", web::get().to(get_all_modelos))
                     .route("/modelo", web::post().to(post_modelo))
                     .route("/carta", web::get().to(get_all_cartas))
-                    .route("/carta", web::post().wrap(carta_form.clone()).to(post_carta))
+                    .route("/carta/{id_carta}", web::post().to(post_carta))
             )
     })
     .bind(("127.0.0.1", 3000))?
