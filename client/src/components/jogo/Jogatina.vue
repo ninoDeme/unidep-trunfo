@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import Carta from '@/components/Carta.vue'
-import { useJogo, type Jogada, type JogoState } from '@/providers/jogo'
+import { useCartas } from '@/providers/cartas'
+import { useJogo } from '@/providers/jogo'
 import { useModelos } from '@/providers/modelos'
 import type { CartaTrunfoAtributo } from 'trunfo-lib/models/carta'
-import { computed, effect, ref } from 'vue'
+import { jogar, type Jogada, type JogoState } from 'trunfo-lib/models/jogo'
+import { computed, effect, ref, watch } from 'vue'
 
 let { modelos } = useModelos()
+let { cartas } = useCartas()
 
 let { partida } = defineProps<{
   partida: string
 }>()
-let { jogo, loadingJogo, errorJogo, usuario } = useJogo(partida)
+let { jogo, loadingJogo, errorJogo, usuario, enviarJogada, jogadaOponente } = useJogo(partida)
 
 let podeJogar = computed(
   () => jogadorAtual.value === usuario.value && !atributoEscolhido.value && !nextJogoState.value
@@ -22,17 +25,6 @@ let modelo = computed(() => {
 })
 
 let adversario = computed(() => (usuario.value == null ? null : usuario.value ? 0 : 1))
-
-function getAdversario(jogador: 0 | 1) {
-  if (!jogo.value) {
-    throw new Error()
-  }
-  if (jogador === 0) {
-    return jogo.value[1]
-  } else {
-    return jogo.value[0]
-  }
-}
 
 const jogadorAtual = computed(() => {
   if (!jogo.value) {
@@ -46,156 +38,61 @@ const jogadorAtual = computed(() => {
   return 0
 })
 
-async function jogar(
-  jogador: 0 | 1,
-  id_carta: number,
-  id_modelo_atributo: number
-): Promise<[JogoState, Jogada]> {
-  if (!jogo.value) {
-    throw new Error()
-  }
-  if (jogadorAtual.value !== jogador) {
-    throw new Error()
-  }
-  const jogadorAtualObj = jogo.value[0]
-  let carta_jogada = jogadorAtualObj.cartaAtual
-  if (!carta_jogada || carta_jogada.id_carta !== id_carta) {
-    throw new Error()
-  }
-  let atributo_jogador = carta_jogada.atributos.find(
-    (attr) => attr.id_modelo_atributo === id_modelo_atributo
-  )
-  if (!atributo_jogador) {
-    throw new Error()
-  }
-
-  let jogador_defendente = getAdversario(jogador)
-  if (!jogador_defendente.cartaAtual) {
-    throw new Error()
-  }
-
-  let carta_defendente = jogador_defendente.cartaAtual
-  let atributo_defendente = jogador_defendente.cartaAtual.atributos.find(
-    (attr) => attr.id_modelo_atributo === id_modelo_atributo
-  )!
-
-  let ganhador: 0 | 1 | null = null
-  if (atributo_jogador.valor > atributo_defendente.valor) {
-    ganhador = jogador
-  } else if (atributo_defendente.valor > atributo_jogador.valor) {
-    ganhador = jogador ? 0 : 1
-  }
-
-  if (ganhador == null) {
-    let monte = [...jogo.value.monte, carta_jogada, jogador_defendente.cartaAtual]
-    let jogador_0 = [...jogo.value[0].cartasBaralho]
-    let jogador_1 = [...jogo.value[1].cartasBaralho]
-    let ganhadorJogo: 0 | 1 | null = null
-    if (jogador_0.length === 0) {
-      ganhadorJogo = 1
-    }
-    if (jogador_1.length === 0) {
-      ganhadorJogo = 0
-    }
-    let jogada = {
-      monte,
-      ganhador: null,
-      jogador: {
-        jogador,
-        id_carta,
-        id_modelo_atributo
-      },
-      defendente: {
-        id_carta: carta_defendente.id_carta,
-        id_model_atributo: atributo_defendente.id_modelo_atributo
-      }
-    }
-    return [
-      {
-        ...jogo.value,
-        monte,
-        0: {
-          ...jogo.value[0],
-          cartaAtual: jogador_0.pop()!,
-          cartasBaralho: jogador_0
-        },
-        1: {
-          ...jogo.value[1],
-          cartaAtual: jogador_1.pop()!,
-          cartasBaralho: jogador_1
-        },
-        ganhador: ganhadorJogo,
-        jogadas: [...jogo.value.jogadas, jogada]
-      },
-      jogada
-    ]
-  }
-
-  let jogador_0 = [...jogo.value[0].cartasBaralho]
-  let jogador_1 = [...jogo.value[1].cartasBaralho]
-  let ganhadorJogo: 1 | 0 | null = null
-  if (ganhador === 0) {
-    if (jogador_1.length === 0) {
-      ganhadorJogo = 0
-    } else {
-      jogador_0.unshift(jogo.value[1].cartaAtual!)
-    }
-  }
-  if (ganhador === 1) {
-    if (jogador_0.length === 0) {
-      ganhadorJogo = 1
-    } else {
-      jogador_1.unshift(jogo.value[0].cartaAtual!)
-    }
-  }
-  let jogada = {
-    monte: [],
-    ganhador,
-    jogador: {
-      jogador,
-      id_carta,
-      id_modelo_atributo
-    },
-    defendente: {
-      id_carta: carta_defendente.id_carta,
-      id_model_atributo: atributo_defendente.id_modelo_atributo
-    }
-  }
-  return [
-    {
-      ...jogo.value,
-      monte: [],
-      ganhador: ganhadorJogo,
-      0: {
-        ...jogo.value[0],
-        cartaAtual: jogador_0.pop() ?? null,
-        cartasBaralho: jogador_0
-      },
-      1: {
-        ...jogo.value[1],
-        cartaAtual: jogador_1.pop() ?? null,
-        cartasBaralho: jogador_1
-      },
-      jogadas: [...jogo.value.jogadas, jogada]
-    },
-    jogada
-  ]
-}
-
 async function jogar_atributo(atributo: CartaTrunfoAtributo) {
   if (usuario.value == null) return
-  if (!jogo.value?.[usuario.value].cartaAtual) return
+  if (jogo.value?.[usuario.value].cartaAtual == null) return
   if (jogadorAtual.value == null) return
+  if (cartas.value === null) return
 
-  let [jogoState, jogada] = await jogar(
-    jogadorAtual.value,
-    jogo.value[usuario.value].cartaAtual!.id_carta,
-    atributo.id_modelo_atributo
+  let [jogoState, jogada] = jogar(
+    {
+      jogador: jogadorAtual.value,
+      id_carta: jogo.value[usuario.value].cartaAtual!,
+      id_modelo_atributo: atributo.id_modelo_atributo
+    },
+    jogo.value,
+    cartas.value
   )
+
+  try {
+    await enviarJogada(jogada)
+    on_jogada(jogada, jogoState)
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+watch(
+  jogadaOponente,
+  () => {
+    if (!jogadaOponente.value) return
+    if (!jogo.value) return
+    if (cartas.value === null) return
+
+    let [jogoState, jogada] = jogar(
+      {
+        jogador: jogadaOponente.value.jogador.jogador,
+        id_carta: jogadaOponente.value.jogador.id_carta,
+        id_modelo_atributo: jogadaOponente.value.jogador.id_modelo_atributo
+      },
+      jogo.value!,
+      cartas.value!
+    )
+
+    on_jogada(jogada, jogoState)
+  },
+  { immediate: true }
+)
+
+function on_jogada(jogada: Jogada, jogoState: JogoState) {
   virar.value = false
   nextJogoState.value = jogoState
   setTimeout(() => {
-    atributoEscolhido.value = atributo
+    atributoEscolhido.value =
+      cartas.value
+        ?.get(jogo.value?.[usuario.value ?? 0].cartaAtual!)
+        ?.atributos.find((attr) => attr.id_modelo_atributo === jogada.jogador.id_modelo_atributo) ??
+      null
     ganhador.value = jogada.ganhador ?? 2
   }, 2000)
 }
@@ -214,17 +111,20 @@ function continueJogo() {
 let nextJogoState = ref<null | JogoState>(null)
 const virar = ref(true)
 const ganhador = ref<null | 0 | 1 | 2>(null)
+
 const atributoEscolhido = ref<CartaTrunfoAtributo | null>(null)
 const atributoEscolhidoAdversario = computed(() => {
-  if (!atributoEscolhido.value) return null
-  if (!adversario.value) return null
+  if (atributoEscolhido.value == null) return null
+  if (adversario.value == null) return null
   let cartaAdversario = jogo.value?.[adversario.value]?.cartaAtual
   if (!cartaAdversario) return null
 
   return (
-    cartaAdversario.atributos.find(
-      (attr) => attr.id_modelo_atributo === atributoEscolhido.value?.id_modelo_atributo
-    ) ?? null
+    cartas.value
+      ?.get(cartaAdversario)
+      ?.atributos.find(
+        (attr) => attr.id_modelo_atributo === atributoEscolhido.value?.id_modelo_atributo
+      ) ?? null
   )
 })
 const textoBottomTela = computed(() => {
@@ -303,7 +203,7 @@ const textoBottomTela = computed(() => {
             :back="virar"
             v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
             :modelo="modelo"
-            :carta="jogo?.[adversario].cartaAtual!"
+            :carta="cartas?.get(jogo?.[adversario].cartaAtual!)"
             :width="260"
           ></Carta>
         </div>
@@ -313,7 +213,7 @@ const textoBottomTela = computed(() => {
           <Carta
             v-if="usuario != null && jogo?.[usuario].cartaAtual && modelo"
             :modelo="modelo"
-            :carta="jogo?.[usuario].cartaAtual!"
+            :carta="cartas?.get(jogo?.[usuario].cartaAtual!)"
             :clicar-atributo="podeJogar"
             @click-attr="jogar_atributo"
             :width="270"

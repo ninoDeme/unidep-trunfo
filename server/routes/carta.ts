@@ -26,9 +26,8 @@ export async function limpaImagens(fastify: FastifyInstance) {
   }
 }
 
-async function routes(fastify: FastifyInstance, _options: unknown) {
-  fastify.get("/", async (_request, reply) => {
-    const cartas = await fastify.db.all<CartaTrunfo[]>(`
+export async function getAllCartas(fastify: FastifyInstance) {
+  const cartas = await fastify.db.all<CartaTrunfo[]>(`
         SELECT
           c.id_carta,
           c.nome,
@@ -38,9 +37,9 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
         FROM carta c
     `);
 
-    for (let carta of cartas) {
-      const atributos = await fastify.db.all<CartaTrunfoAtributo[]>(
-        `
+  for (let carta of cartas) {
+    const atributos = await fastify.db.all<CartaTrunfoAtributo[]>(
+      `
         SELECT
           ca.id_modelo_atributo,
           ma.nome,
@@ -52,16 +51,22 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
           JOIN modelo_atributo ma ON ca.id_modelo_atributo = ma.id_modelo_atributo AND id_modelo = ?
         WHERE id_carta = ?
       `,
-        [carta.id_modelo, carta.id_carta],
-      );
+      [carta.id_modelo, carta.id_carta],
+    );
 
-      for (let atributo of atributos) {
-        atributo.a = !!atributo.a;
-      }
-
-      carta.atributos = atributos.sort((b, a) => b.ordem - a.ordem);
-      carta.super_trunfo = !!carta.super_trunfo;
+    for (let atributo of atributos) {
+      atributo.a = !!atributo.a;
     }
+
+    carta.atributos = atributos.sort((b, a) => b.ordem - a.ordem);
+    carta.super_trunfo = !!carta.super_trunfo;
+  }
+  return cartas
+}
+
+async function routes(fastify: FastifyInstance, _options: unknown) {
+  fastify.get("/", async (_request, reply) => {
+    const cartas = await getAllCartas(fastify)
     reply.send(cartas);
   });
 
@@ -126,8 +131,8 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
     const data = request.parts();
     for await (const part of data) {
       if (part.fieldname === "img" && part.type === "file") {
-        if (!fs.existsSync(`./uploads/carta/`)){
-            fs.mkdirSync(`./uploads/carta/`);
+        if (!fs.existsSync(`./uploads/carta/`)) {
+          fs.mkdirSync(`./uploads/carta/`);
         }
         let p = cp.execFile("cwebp", [
           "-q",

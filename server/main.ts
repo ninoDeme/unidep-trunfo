@@ -3,8 +3,10 @@ import fastifySqlite from "fastify-sqlite-typed";
 import fs_promises from "fs/promises";
 import carta_routes from "./routes/carta";
 import modelo_routes from "./routes/modelo";
+import jogo_routes from "./routes/jogo";
 import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
+import fastifyWebsocket from "@fastify/websocket";
 import path from "path";
 import { existsSync } from "fs";
 
@@ -48,12 +50,15 @@ import { existsSync } from "fs";
     decorateReply: true,
   });
 
+  app.register(fastifyWebsocket)
+
   app.get("/api/version", function (request, reply) {
     reply.send("0.0.1");
   });
 
   app.register(carta_routes, { prefix: "/api/carta" });
   app.register(modelo_routes, { prefix: "/api/modelo" });
+  app.register(jogo_routes, { prefix: "/api/jogo" });
 
   app.listen({ port: 3000 }, async function (err, address) {
     if (err) {

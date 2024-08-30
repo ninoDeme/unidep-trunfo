@@ -18,6 +18,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:3000',
+      '/api/jogo/ws': {
+        target: 'ws://localhost:3000',
+        ws: true
+      },
       '/uploads': 'http://localhost:3000'
     }
   }
