@@ -28,7 +28,7 @@ CREATE TABLE carta (
 CREATE TABLE carta_atributo (
   id_modelo_atributo INTEGER,
   id_carta INTEGER,
-  valor DOUBLE NOT NULL,
+  valor REAL NOT NULL,
   a INTEGER DEFAULT 0,
   FOREIGN KEY(id_carta) REFERENCES carta(id_carta)
   FOREIGN KEY(id_modelo_atributo) REFERENCES modelo_atributo(id_modelo_atributo)

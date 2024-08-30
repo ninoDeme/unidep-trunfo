@@ -3,12 +3,15 @@ use std::io;
 use actix_web::{middleware, web, App, HttpServer, Responder};
 use r2d2_sqlite::SqliteConnectionManager;
 
+use std::path::Path;
+
 mod db;
 mod modelo;
 mod carta;
 use modelo::{get_all_modelos, post_modelo};
 use carta::{get_all_cartas, post_carta};
 use db::{Pool};
+use std::fs;
 
 // async fn parallel_weather(db: web::Data<Pool>) -> Result<HttpResponse, AWError> {
 //     let fut_result = vec![
@@ -26,8 +29,13 @@ async fn version() -> impl Responder {
     "0.0.2"
 }
 
+fn create_uploads_if_not_exists() {
+    fs::create_dir_all(Path::new("./uploads/carta")).expect("Unaple to create uploads")
+}
+
 #[actix_web::main]
 async fn main() -> io::Result<()> {
+    create_uploads_if_not_exists();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     // connect to SQLite DB
@@ -51,11 +59,15 @@ async fn main() -> io::Result<()> {
                     .route("/modelo", web::get().to(get_all_modelos))
                     .route("/modelo", web::post().to(post_modelo))
                     .route("/carta", web::get().to(get_all_cartas))
-                    .route("/carta/{id_carta}", web::post().to(post_carta))
+                    .route("/carta/{id_carta}", web::post().to(post_carta)),
+            )
+            .service(
+                actix_files::Files::new("/uploads", "./uploads")
+                    .show_files_listing()
+                    .use_last_modified(true),
             )
     })
     .bind(("127.0.0.1", 3000))?
-    .workers(2)
     .run()
     .await
 }
