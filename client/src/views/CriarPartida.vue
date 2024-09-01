@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useModelos } from '@/providers/modelos'
 import { useNome } from '@/providers/nome'
-import { encodeGameString } from 'trunfo-lib/models/jogo'
 import type { Modelo } from 'trunfo-lib/models/modelo'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -21,8 +20,18 @@ const disabelSave = computed(() => {
 
 const router = useRouter()
 
-async function criarSala() {
-  return parseInt(await fetch('/api/jogo/get_id').then(r => r.text()));
+async function criarSala(id_modelo: number) {
+  return await fetch('/api/jogo/create_sala', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ id_modelo })
+  }).then((r) => {
+    if (!r.ok) throw new Error('Não foi possível criar a sala')
+    return r.json()
+  })
 }
 
 async function savePartida() {
@@ -32,11 +41,7 @@ async function savePartida() {
 
   setNome(nome.value)
 
-  let salaString = encodeGameString({
-    sala: await criarSala(),
-    id_modelo: modeloSelecionado.value.id_modelo,
-    jogador: 0
-  })
+  let salaString = await criarSala(modeloSelecionado.value.id_modelo).then((v) => v[0])
 
   router.push('/jogo/' + salaString)
 }

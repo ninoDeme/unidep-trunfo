@@ -53,7 +53,7 @@ const emit = defineEmits<{
           @click="carta && clicarAtributo && emit('clickAttr', carta.atributos[index])"
           :key="atributo.id_modelo_atributo"
           :style="{ backgroundColor: modelo.cor_atributo_fundo, color: modelo.cor_atributo_texto }"
-          class="flex flex-row justify-between my-1 text-2xl w-full not-opacity-disabled"
+          class="flex flex-row justify-between my-0.5 text-2xl w-full not-opacity-disabled rounded"
         >
           <span class="p-2"> {{ atributo.nome }} </span>
           <span class="p-2"> {{ 'valor' in atributo ? atributo.valor : '0000' }} </span>

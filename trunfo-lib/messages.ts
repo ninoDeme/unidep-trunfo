@@ -32,7 +32,7 @@ export type ServerMessage = {
   data: [code: number, message: string]
 } | {
   s_type: ServerMessageType.Ready,
-  data: [JogoState, boolean]
+  data: {jogo: JogoState, oponente_conectado: boolean, codigo_oponente: string, jogador: 0 | 1 }
 } | {
   s_type: ServerMessageType.JogadaInvalida,
   data: {jogada_id: number, message: string, server_state: JogoState}

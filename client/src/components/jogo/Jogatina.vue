@@ -1,19 +1,23 @@
 <script setup lang="ts">
 import Carta from '@/components/Carta.vue'
 import { useCartas } from '@/providers/cartas'
-import { useJogo } from '@/providers/jogo'
+import { type UseJogoReturn } from '@/providers/jogo'
 import { useModelos } from '@/providers/modelos'
+import { Bars4Icon, FlagIcon, QuestionMarkCircleIcon, ViewColumnsIcon } from '@heroicons/vue/24/outline'
 import type { CartaTrunfoAtributo } from 'trunfo-lib/models/carta'
 import { jogar, type Jogada, type JogoState } from 'trunfo-lib/models/jogo'
-import { computed, effect, ref, watch } from 'vue'
+import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue'
 
 let { modelos } = useModelos()
 let { cartas } = useCartas()
 
-let { partida } = defineProps<{
-  partida: string
-}>()
-let { jogo, loadingJogo, errorJogo, usuario, enviarJogada, jogadaOponente } = useJogo(partida)
+let { jogo, loadingJogo, errorJogo, usuario, enviarJogada, jogadaOponente } = inject<UseJogoReturn>(
+  'jogo',
+  () => {
+    throw new Error()
+  },
+  true
+)
 
 let podeJogar = computed(
   () => jogadorAtual.value === usuario.value && !atributoEscolhido.value && !nextJogoState.value
@@ -85,16 +89,20 @@ watch(
 )
 
 function on_jogada(jogada: Jogada, jogoState: JogoState) {
-  virar.value = false
-  nextJogoState.value = jogoState
+  animacaoVirar.value = true
   setTimeout(() => {
-    atributoEscolhido.value =
-      cartas.value
-        ?.get(jogo.value?.[usuario.value ?? 0].cartaAtual!)
-        ?.atributos.find((attr) => attr.id_modelo_atributo === jogada.jogador.id_modelo_atributo) ??
-      null
-    ganhador.value = jogada.ganhador ?? 2
-  }, 2000)
+    virar.value = false
+    nextJogoState.value = jogoState
+    setTimeout(() => {
+      atributoEscolhido.value =
+        cartas.value
+          ?.get(jogo.value?.[usuario.value ?? 0].cartaAtual!)
+          ?.atributos.find(
+            (attr) => attr.id_modelo_atributo === jogada.jogador.id_modelo_atributo
+          ) ?? null
+      ganhador.value = jogada.ganhador ?? 2
+    }, 2000)
+  }, 1000)
 }
 
 function continueJogo() {
@@ -102,13 +110,15 @@ function continueJogo() {
   atributoEscolhido.value = null
   virar.value = true
 
+  jogo.value = nextJogoState.value
+  nextJogoState.value = null
   setTimeout(() => {
-    jogo.value = nextJogoState.value
-    nextJogoState.value = null
+    animacaoVirar.value = true
   }, 300)
 }
 
 let nextJogoState = ref<null | JogoState>(null)
+const animacaoVirar = ref(false)
 const virar = ref(true)
 const ganhador = ref<null | 0 | 1 | 2>(null)
 
@@ -129,7 +139,7 @@ const atributoEscolhidoAdversario = computed(() => {
 })
 const textoBottomTela = computed(() => {
   if (podeJogar.value) {
-    return 'Seleciona uma informação de sua carta'
+    return 'Selecione uma informação de sua carta'
   }
   if (atributoEscolhido.value) {
     return 'Pressione na tela para continuar'
@@ -144,6 +154,24 @@ const textoBottomTela = computed(() => {
     return 'Você perdeu!'
   }
   return '\xa0'
+})
+
+const topDivEl = ref<null | HTMLElement>(null)
+const widthCarta = ref(250)
+let resizeObs: ResizeObserver | null = null
+let expandSidebar = ref(false);
+
+onMounted(() => {
+  if (!topDivEl.value) return
+  resizeObs = new ResizeObserver(() => {
+    if (!topDivEl.value) return
+    widthCarta.value = Math.min((topDivEl.value.clientHeight / 660) * 500 - 10, 260)
+  })
+  resizeObs.observe(topDivEl.value)
+  widthCarta.value = Math.min((topDivEl.value.clientHeight / 660) * 500 - 10, 270)
+})
+onUnmounted(() => {
+  resizeObs?.disconnect()
 })
 </script>
 
@@ -195,20 +223,54 @@ const textoBottomTela = computed(() => {
         class="flex flex-col items-center justify-center flex-1"
         :class="{ 'blur-[1px]': atributoEscolhido }"
       >
-        <div class="flex flex-row items-center gap-4 relative justify-center w-full">
-          <Carta
-            @click="virar = !virar"
-            @click-attr="jogar_atributo"
-            :clicar-atributo="!podeJogar && !atributoEscolhido"
-            :back="virar"
-            v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
-            :modelo="modelo"
-            :carta="cartas?.get(jogo?.[adversario].cartaAtual!)"
-            :width="260"
-          ></Carta>
+        <div
+          class="relative w-full flex-1"
+          ref="topDivEl"
+        >
+          <div
+            class="absolute top-0 left-0 w-full h-full flex items-center justify-center overflow-hidden"
+          >
+            <Carta
+              @click="virar = !virar"
+              @click-attr="jogar_atributo"
+              :clicar-atributo="!podeJogar && !atributoEscolhido"
+              :back="virar"
+              v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
+              :modelo="modelo"
+              :carta="cartas?.get(jogo?.[adversario].cartaAtual!)"
+              :width="widthCarta"
+            ></Carta>
+          </div>
+          <div v-if="!animacaoVirar"class="absolute z-20 flex items-center h-full top-0 left-0 overflow-x-hidden" :class="expandSidebar ? 'w-max' : 'w-10'">
+            <div class="w-full my-auto flex flex-col items-stretch bg-gray-800">
+              <button @click="expandSidebar = !expandSidebar" class="bg-gray-700 text-xl p-2 gap-3 mb-px h-10 flex items-center justify-start" type="button">
+                <Bars4Icon class="icon"></Bars4Icon>
+                <div v-if="expandSidebar">
+                  Recolher Menu
+                </div>
+              </button>
+              <button class="bg-gray-700 text-xl p-2 gap-3 mb-px h-10 flex items-center justify-start" type="button">
+                <ViewColumnsIcon class="icon"></ViewColumnsIcon>
+                <div v-if="expandSidebar">
+                  Ver Baralho
+                </div>
+              </button>
+              <button class="bg-gray-700 text-xl p-2 gap-3 mb-px h-10 flex items-center justify-start" type="button">
+                <QuestionMarkCircleIcon class="icon"></QuestionMarkCircleIcon>
+                <div v-if="expandSidebar">
+                  Como Jogar
+                </div>
+              </button>
+              <button class="bg-gray-700 text-xl p-2 gap-3 mb-px h-10 flex items-center justify-start" type="button">
+                <FlagIcon class="icon"></FlagIcon>
+                <div v-if="expandSidebar">
+                  Dessistir
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="flex-1"></div>
-        <div class="flex flex-row items-center gap-4 relative justify-center w-full">
+        <div class="flex flex-row items-center gap-4 relative justify-center w-full mt-4">
           <!-- <Baralho class="absolute left-4 bottom-4" v-if="modelo" :modelo="modelo" :cartas-baralho="jogo?.[0].cartasBaralho"/> -->
           <Carta
             v-if="usuario != null && jogo?.[usuario].cartaAtual && modelo"
@@ -220,7 +282,7 @@ const textoBottomTela = computed(() => {
           ></Carta>
         </div>
       </div>
-      <div class="py-3 items-stretch justify-center z-50">
+      <div class="py-3 items-stretch justify-center z-50 px-1">
         <div class="text-2xl text-center">{{ textoBottomTela }}</div>
       </div>
     </div>
