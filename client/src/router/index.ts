@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Conectar from '../views/Conectar.vue'
 import Jogo from '@/views/Jogo.vue'
 import CriarPartida from '@/views/CriarPartida.vue'
+import SeJuntar from '@/views/SeJuntar.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,6 +11,11 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: Conectar
+    },
+    {
+      path: '/se-juntar',
+      name: 'se-juntar',
+      component: SeJuntar
     },
     {
       path: '/criar-partida',
@@ -39,7 +45,7 @@ const router = createRouter({
           path: '',
           name: '',
           redirect: '/criador/modelo'
-        },
+        }
       ]
     },
     {

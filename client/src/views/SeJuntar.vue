@@ -1,50 +1,37 @@
 <script setup lang="ts">
 import { useNome } from '@/providers/nome'
-import { encodeGameString } from 'trunfo-lib/models/jogo'
-import type { Modelo } from 'trunfo-lib/models/modelo'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-
-const modeloSelecionado = ref<Modelo | null>(null)
 
 const { nome: nome_salvo, setNome } = useNome()
 
 const nome = ref<string>(nome_salvo.value ?? '')
-const codigo = ref<string>('');
+const codigo = ref<string>('')
 
 const disabelSave = computed(() => {
   if (!nome.value || nome.value.length <= 2) return true
-  if (codigo.value.length !== 7) return true
+  let new_codigo = codigo.value.replace(/[^a-z]/g, '').toLowerCase();
+  if (new_codigo.length !== 6) return true
 })
-
 
 const router = useRouter()
 
-async function criarSala() {
-  return parseInt(await fetch('/api/jogo/get_id').then(r => r.text()));
-}
-
 async function savePartida() {
-  if (!modeloSelecionado.value) return null
+  if (!nome.value || nome.value.length <= 2) return true
 
-  if (!nome.value || nome.value.length <= 2) return null
+  let new_codigo = codigo.value.replace(/[^a-z]/g, '').toLowerCase();
+  if (new_codigo.length !== 6) return true
 
   setNome(nome.value)
 
-  let salaString = encodeGameString({
-    sala: await criarSala(),
-    id_modelo: modeloSelecionado.value.id_modelo,
-    jogador: 0
-  })
-
-  router.push('/jogo/' + salaString)
+  router.push('/jogo/' + new_codigo)
 }
 </script>
 
 <template>
   <main>
     <div class="h-screen w-screen flex flex-col items-center justify-center gap-3">
-      <h1 class="text-2xl mb-6 font-medium text-center">Selecione o baralho que vai ser usado</h1>
+      <h1 class="text-2xl mb-6 font-medium text-center">Se juntar a uma partida</h1>
       <div class="flex flex-col items-stretch justify-center gap-4">
         <div class="flex flex-col items-start">
           <label for="nome" class="text-lg">Seu nome</label>
@@ -59,13 +46,14 @@ async function savePartida() {
         </div>
 
         <div class="flex flex-col items-start">
-          <label for="nome" class="text-lg">Seu nome</label>
+          <label for="nome" class="text-lg">Código da Sala</label>
           <input
-            name="nome"
+            name="codigo"
             type="text"
+            maxlength="7"
             required
-            v-model.trim="nome"
-            id="nome"
+            v-model.trim="codigo"
+            id="codigo"
             class="input-trunfo text-xl"
           />
         </div>

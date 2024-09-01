@@ -46,7 +46,6 @@ export function generateCheckSum(code: string) {
 
 export function decodeCodigo(code: string) {
   let sala = code.substring(0, code.length - 1);
-  console.log(sala)
   let checksum = code[code.length - 1]
   let jogador: 0 | 1 = 0
   if (CHARS_MAP.get(checksum)! > MAX - 1) {

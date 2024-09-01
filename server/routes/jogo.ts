@@ -254,9 +254,9 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
     if (id_modelo == null || typeof id_modelo !== 'number') {
       return response.code(400).send('Modelo Invalido')
     }
-    let number = generateCodigo(4)
+    let number = generateCodigo(5)
     while (salas.get(number)) {
-      number = generateCodigo(4)
+      number = generateCodigo(5)
     }
 
     salas.delete(number)
