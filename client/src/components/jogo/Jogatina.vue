@@ -7,6 +7,10 @@ import { Bars4Icon, FlagIcon, QuestionMarkCircleIcon, ViewColumnsIcon } from '@h
 import type { CartaTrunfoAtributo } from 'trunfo-lib/models/carta'
 import { jogar, type Jogada, type JogoState } from 'trunfo-lib/models/jogo'
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { toast } from 'vue3-toastify'
+
+let router = useRouter()
 
 let { modelos } = useModelos()
 let { cartas } = useCartas()
@@ -48,20 +52,26 @@ async function jogar_atributo(atributo: CartaTrunfoAtributo) {
   if (jogadorAtual.value == null) return
   if (cartas.value === null) return
 
-  let [jogoState, jogada] = jogar(
-    {
-      jogador: jogadorAtual.value,
-      id_carta: jogo.value[usuario.value].cartaAtual!,
-      id_modelo_atributo: atributo.id_modelo_atributo
-    },
-    jogo.value,
-    cartas.value
-  )
-
   try {
+    let [jogoState, jogada] = jogar(
+      {
+        jogador: jogadorAtual.value,
+        id_carta: jogo.value[usuario.value].cartaAtual!,
+        id_modelo_atributo: atributo.id_modelo_atributo
+      },
+      jogo.value,
+      cartas.value
+    )
+
     await enviarJogada(jogada)
     on_jogada(jogada, jogoState)
   } catch (e) {
+    if (e instanceof Error) {
+      toast(e.message, {
+        type: 'error',
+        theme: 'colored',
+      })
+    }
     console.error(e)
   }
 }
@@ -90,31 +100,34 @@ watch(
 
 function on_jogada(jogada: Jogada, jogoState: JogoState) {
   animacaoVirar.value = true
+  virar.value = false
+  nextJogoState.value = jogoState
   setTimeout(() => {
-    virar.value = false
-    nextJogoState.value = jogoState
-    setTimeout(() => {
-      atributoEscolhido.value =
-        cartas.value
-          ?.get(jogo.value?.[usuario.value ?? 0].cartaAtual!)
-          ?.atributos.find(
-            (attr) => attr.id_modelo_atributo === jogada.jogador.id_modelo_atributo
-          ) ?? null
-      ganhador.value = jogada.ganhador ?? 2
-    }, 2000)
-  }, 1000)
+    atributoEscolhido.value =
+      cartas.value
+        ?.get(jogo.value?.[usuario.value ?? 0].cartaAtual!)
+        ?.atributos.find(
+          (attr) => attr.id_modelo_atributo === jogada.jogador.id_modelo_atributo
+        ) ?? null
+    ganhador.value = jogada.ganhador ?? 2
+  }, 2000)
 }
 
 function continueJogo() {
-  if (!nextJogoState) return
-  atributoEscolhido.value = null
-  virar.value = true
+  if (nextJogoState.value) {
+    atributoEscolhido.value = null
+    virar.value = true
 
-  jogo.value = nextJogoState.value
-  nextJogoState.value = null
-  setTimeout(() => {
-    animacaoVirar.value = true
-  }, 300)
+    jogo.value = nextJogoState.value
+    nextJogoState.value = null
+    setTimeout(() => {
+      animacaoVirar.value = true
+    }, 250)
+  }
+
+  if (jogo.value?.ganhador != null) {
+    router.push('/')
+  }
 }
 
 let nextJogoState = ref<null | JogoState>(null)
@@ -138,6 +151,9 @@ const atributoEscolhidoAdversario = computed(() => {
   )
 })
 const textoBottomTela = computed(() => {
+  if (jogo.value?.ganhador != null) {
+    return '\xa0'
+  }
   if (podeJogar.value) {
     return 'Selecione uma informação de sua carta'
   }
@@ -146,12 +162,6 @@ const textoBottomTela = computed(() => {
   }
   if (jogadorAtual.value !== null && jogadorAtual.value === adversario.value) {
     return 'Espere o oponente vazer sua jogada'
-  }
-  if (usuario.value !== null && jogo.value?.ganhador === usuario.value) {
-    return 'Você ganhou!'
-  }
-  if (adversario.value !== null && jogo.value?.ganhador === adversario.value) {
-    return 'Você perdeu!'
   }
   return '\xa0'
 })
@@ -181,9 +191,14 @@ onUnmounted(() => {
       <button
         @click="continueJogo()"
         class="absolute left-0 top-0 w-full h-full z-20 px-4 bg-black bg-opacity-60"
-        v-if="atributoEscolhido && modelo"
+        v-if="(atributoEscolhido || jogo?.ganhador != null) && modelo"
       >
-        <div class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full">
+        <div class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full" v-if="jogo?.ganhador != null">
+            <div class="text-2xl font-normal my-16">
+              {{ jogo.ganhador === usuario ? 'Você ganhou' : 'Você perdeu' }}
+            </div>
+        </div>
+        <div class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full" v-if="atributoEscolhido">
           <div class="flex flex-col justify-center items-center flex-1 w-full">
             <div class="flex flex-col items-center w-full">
               <div class="text-2xl">Informação da carta do oponente</div>
@@ -231,8 +246,6 @@ onUnmounted(() => {
             class="absolute top-0 left-0 w-full h-full flex items-center justify-center overflow-hidden"
           >
             <Carta
-              @click="virar = !virar"
-              @click-attr="jogar_atributo"
               :clicar-atributo="!podeJogar && !atributoEscolhido"
               :back="virar"
               v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
@@ -273,7 +286,8 @@ onUnmounted(() => {
         <div class="flex flex-row items-center gap-4 relative justify-center w-full mt-4">
           <!-- <Baralho class="absolute left-4 bottom-4" v-if="modelo" :modelo="modelo" :cartas-baralho="jogo?.[0].cartasBaralho"/> -->
           <Carta
-            v-if="usuario != null && jogo?.[usuario].cartaAtual && modelo"
+            v-if="usuario != null && modelo"
+            :class="{'opacity-0': !jogo?.[usuario].cartaAtual}"
             :modelo="modelo"
             :carta="cartas?.get(jogo?.[usuario].cartaAtual!)"
             :clicar-atributo="podeJogar"

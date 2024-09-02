@@ -46,7 +46,7 @@ export function useJogo(partidaString: string, nome?: string) {
       }
 
       socket.onclose = (e) => {
-        console.log(e);
+        console.log(e)
         if (!errorConexao.value) {
           errorConexao.value = e.reason || 'Ocoreu um erro, tente novamente mais tarde'
         }
@@ -69,7 +69,7 @@ export function useJogo(partidaString: string, nome?: string) {
         errorConexao.value = 'Não foi possível conectar, tente novamente mais tarde'
       }
       if (socket) {
-        socket.close(1000, 'Erro inesperado: ' + errorConexao);
+        socket.close(1000, 'Erro inesperado: ' + errorConexao)
       }
       throw e
     } finally {
@@ -107,6 +107,7 @@ export function useJogo(partidaString: string, nome?: string) {
       )
     })
 
+    promise.finally(() => filaJogada.value = null)
     return promise
   }
 

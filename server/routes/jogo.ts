@@ -26,23 +26,17 @@ export interface Jogo {
 
 async function routes(fastify: FastifyInstance, _options: unknown) {
   const salas = new Map<string, Jogo | true>()
-  let cartas_cache: Promise<CartaTrunfo[]>
-  let modelos_cache: Promise<Map<number, Modelo>>
 
   async function createJogo(sala: string, id_modelo: number): Promise<Jogo> {
     if (salas.has(sala)) throw new Error('Jogo já existe')
 
-    if (!cartas_cache) {
-      cartas_cache = getAllCartas(fastify)
-    }
-    if (!modelos_cache) {
-      modelos_cache = getAllModelos(fastify).then(
-        (m) => new Map(m.map((modelo) => [modelo.id_modelo, modelo]))
-      )
-    }
+    let all_cartas = getAllCartas(fastify)
+    let modelos = getAllModelos(fastify).then(
+      (m) => new Map(m.map((modelo) => [modelo.id_modelo, modelo]))
+    )
 
-    let cartas = await cartas_cache.then((c) => c.filter((carta) => carta.id_modelo === id_modelo))
-    let modelo = await modelos_cache.then((m) => m.get(id_modelo))
+    let cartas = await all_cartas.then((c) => c.filter((carta) => carta.id_modelo === id_modelo))
+    let modelo = await modelos.then((m) => m.get(id_modelo))
 
     if (!modelo) throw new Error('Baralho/Modelo não existe')
 

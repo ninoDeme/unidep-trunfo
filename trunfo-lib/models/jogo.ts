@@ -70,7 +70,7 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
 
   let jogador_defendente = jogo[jogador ? 0 : 1];
   if (!jogador_defendente.cartaAtual) {
-    throw new Error("Oponente não possuí mais cartas (Dessincronizado)")
+    throw new Error("Oponente não possuí mais cartas")
   }
 
   let carta_defendente = cartas.get(jogador_defendente.cartaAtual);
@@ -138,14 +138,14 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
   let jogador_1 = [...jogo[1].cartasBaralho]
   let ganhadorJogo: 1 | 0 | null = null
   if (ganhador === 0) {
-    if (jogador_1.length === 0) {
+    if (jogador_1.length <= 1) {
       ganhadorJogo = 0
     } else {
       jogador_0.unshift(jogo[1].cartaAtual!)
     }
   }
   if (ganhador === 1) {
-    if (jogador_0.length === 0) {
+    if (jogador_0.length <= 1) {
       ganhadorJogo = 1
     } else {
       jogador_1.unshift(jogo[0].cartaAtual!)

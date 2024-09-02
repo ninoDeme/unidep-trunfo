@@ -30,6 +30,17 @@ function copiarUrl() {
   })
 }
 
+function copiarCodigo() {
+  if (!urlConexao.value) return
+  if (!navigator.clipboard) return
+  navigator.clipboard.writeText(codigoFormatado.value ?? '')
+  toast("Copiado código", {
+    position: 'bottom-center',
+    theme: 'colored',
+    type: 'info'
+  })
+}
+
 const codigoFormatado = computed(() => {
   let cod = codigoOponente.value ?? 'xxxxxx'
   return cod.substring(0, 3) + '-' + cod.substring(3)
@@ -57,9 +68,9 @@ watch(errorConexao, () => {
     <div class="wrapper overflow-y-hidden relative justify-center flex flex-col items-center">
       <h1 class="text-2xl mb-6">Esperando Oponente...</h1>
       <span class="text-lg"> Envie este código para o oponente para ele se juntar a sua sala:</span>
-      <div class="m-4 flex flex-row gap-1 border-white border p-1.5 rounded">
+      <div class="m-4 flex flex-row gap-4 border-white border p-1.5 rounded">
         <span class="text-2xl">{{ codigoFormatado }}</span>
-        <button aria-label="Copiar URL" type="button" @click="copiarUrl()" class="icon-button">
+        <button aria-label="Copiar código" type="button" @click="copiarCodigo()" class="icon-button">
           <ClipboardIcon class="icon"></ClipboardIcon>
         </button>
       </div>
