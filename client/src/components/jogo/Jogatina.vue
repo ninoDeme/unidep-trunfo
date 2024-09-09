@@ -197,9 +197,6 @@ const particleOptions = {
   },
   preset: 'confetti'
 }
-if (jogo.value) {
-  jogo.value.ganhador = 0;
-}
 </script>
 
 <template>

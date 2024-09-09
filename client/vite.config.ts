@@ -17,12 +17,14 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:3000',
+      // '/api': 'http://localhost:3000',
+      '/api': 'https://trunfo.ninodeme.com',
       '/api/jogo/ws': {
         target: 'ws://localhost:3000',
         ws: true
       },
-      '/uploads': 'http://localhost:3000'
+      '/uploads': 'https://trunfo.ninodeme.com',
+      // '/uploads': 'http://localhost:3000'
     }
   }
 })

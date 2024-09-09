@@ -124,7 +124,7 @@ async function salvar() {
       <div
         v-for="(atributo, index) in modelo.atributos"
         :key="atributo.id_modelo_atributo"
-        class="flex flex-row m-1 gap-1"
+        class="flex flex-row m-1 gap-1 textl-xl"
       >
         <span> {{ atributo.ordem }}: </span>
         <input
@@ -134,6 +134,7 @@ async function salvar() {
           v-model.trim="atributo.nome"
           class="input-trunfo"
         />
+        <input type="number" v-model="atributo.tipo" class="input-trunfo w-14">
         <div class="flex-1"></div>
         <button
           aria-label="remover atributo"
