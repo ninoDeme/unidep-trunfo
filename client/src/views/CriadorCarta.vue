@@ -24,6 +24,9 @@ const cartaHover = ref<null | CartaTrunfo>(null)
 const cartaPreview = computed(() => {
   return cartaEditando.value ?? cartaHover.value
 })
+const descricaoFocada = ref(false)
+const virouManual = ref(false)
+const mostraBack = computed(() => descricaoFocada.value || virouManual.value)
 </script>
 
 <template>
@@ -57,6 +60,7 @@ const cartaPreview = computed(() => {
         v-if="modeloEditando && cartaEditando"
         :modelo="modeloEditando"
         v-model="cartaEditando"
+        @descricao-focada="(x) => descricaoFocada = x"
         @cancelar="cartaEditando = null"
         @salvar="
           () => {
@@ -67,13 +71,14 @@ const cartaPreview = computed(() => {
       />
     </div>
     <div class="bg-gray-400 flex-1 flex items-center justify-center">
-      <div class="m-auto">
+      <button class="m-auto" @click="virouManual = !virouManual">
         <Carta
           v-if="modeloPreview"
           :modelo="modeloPreview"
+          :back="mostraBack"
           :carta="cartaPreview ?? undefined"
         ></Carta>
-      </div>
+      </button>
     </div>
   </div>
 </template>

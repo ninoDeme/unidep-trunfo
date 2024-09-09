@@ -3,7 +3,12 @@ import Carta from '@/components/Carta.vue'
 import { useCartas } from '@/providers/cartas'
 import { type UseJogoReturn } from '@/providers/jogo'
 import { useModelos } from '@/providers/modelos'
-import { Bars4Icon, FlagIcon, QuestionMarkCircleIcon, ViewColumnsIcon } from '@heroicons/vue/24/outline'
+import {
+  Bars4Icon,
+  FlagIcon,
+  QuestionMarkCircleIcon,
+  ViewColumnsIcon
+} from '@heroicons/vue/24/outline'
 import type { CartaTrunfoAtributo } from 'trunfo-lib/models/carta'
 import { jogar, type Jogada, type JogoState } from 'trunfo-lib/models/jogo'
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -15,13 +20,14 @@ let router = useRouter()
 let { modelos } = useModelos()
 let { cartas } = useCartas()
 
-let { jogo, loadingJogo, errorJogo, usuario, enviarJogada, jogadaOponente } = inject<UseJogoReturn>(
-  'jogo',
-  () => {
-    throw new Error()
-  },
-  true
-)
+let { jogo, errorJogo, errorConexao, usuario, enviarJogada, jogadaOponente } =
+  inject<UseJogoReturn>(
+    'jogo',
+    () => {
+      throw new Error()
+    },
+    true
+  )
 
 let podeJogar = computed(
   () => jogadorAtual.value === usuario.value && !atributoEscolhido.value && !nextJogoState.value
@@ -69,7 +75,7 @@ async function jogar_atributo(atributo: CartaTrunfoAtributo) {
     if (e instanceof Error) {
       toast(e.message, {
         type: 'error',
-        theme: 'colored',
+        theme: 'colored'
       })
     }
     console.error(e)
@@ -106,9 +112,8 @@ function on_jogada(jogada: Jogada, jogoState: JogoState) {
     atributoEscolhido.value =
       cartas.value
         ?.get(jogo.value?.[usuario.value ?? 0].cartaAtual!)
-        ?.atributos.find(
-          (attr) => attr.id_modelo_atributo === jogada.jogador.id_modelo_atributo
-        ) ?? null
+        ?.atributos.find((attr) => attr.id_modelo_atributo === jogada.jogador.id_modelo_atributo) ??
+      null
     ganhador.value = jogada.ganhador ?? 2
   }, 2000)
 }
@@ -169,7 +174,7 @@ const textoBottomTela = computed(() => {
 const topDivEl = ref<null | HTMLElement>(null)
 const widthCarta = ref(250)
 let resizeObs: ResizeObserver | null = null
-let expandSidebar = ref(false);
+let expandSidebar = ref(false)
 
 onMounted(() => {
   if (!topDivEl.value) return
@@ -183,124 +188,123 @@ onMounted(() => {
 onUnmounted(() => {
   resizeObs?.disconnect()
 })
+
+const particleOptions = {
+  particles: {
+    color: {
+      // value: ['#0000ff', '#00ff00']
+    }
+  },
+  preset: 'confetti'
+}
+if (jogo.value) {
+  jogo.value.ganhador = 0;
+}
 </script>
 
 <template>
-  <main>
-    <div class="wrapper overflow-y-hidden relative flex flex-col">
-      <button
-        @click="continueJogo()"
-        class="absolute left-0 top-0 w-full h-full z-20 px-4 bg-black bg-opacity-60"
-        v-if="(atributoEscolhido || jogo?.ganhador != null) && modelo"
-      >
-        <div class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full" v-if="jogo?.ganhador != null">
-            <div class="text-2xl font-normal my-16">
-              {{ jogo.ganhador === usuario ? 'Você ganhou' : 'Você perdeu' }}
-            </div>
-        </div>
-        <div class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full" v-if="atributoEscolhido">
-          <div class="flex flex-col justify-center items-center flex-1 w-full">
-            <div class="flex flex-col items-center w-full">
-              <div class="text-2xl">Informação da carta do oponente</div>
-              <div
-                v-if="atributoEscolhidoAdversario"
-                :style="{
-                  backgroundColor: modelo.cor_atributo_fundo,
-                  color: modelo.cor_atributo_texto
-                }"
-                class="flex flex-row justify-between my-1 text-xl w-full"
-              >
-                <span class="p-2"> {{ atributoEscolhidoAdversario.nome }} </span>
-                <span class="p-2"> {{ atributoEscolhidoAdversario.valor }} </span>
-              </div>
-            </div>
-            <div :class="{ 'opacity-0': ganhador == null }" class="text-2xl font-normal my-16">
-              {{ ganhador === usuario ? 'Você ganhou' : 'Você perdeu' }}
-            </div>
-
-            <div class="flex flex-col items-center w-full">
-              <div class="text-2xl">Informação da sua carta</div>
-              <div
-                :style="{
-                  backgroundColor: modelo.cor_atributo_fundo,
-                  color: modelo.cor_atributo_texto
-                }"
-                class="flex flex-row justify-between my-1 text-xl w-full"
-              >
-                <span class="p-2"> {{ atributoEscolhido.nome }} </span>
-                <span class="p-2"> {{ atributoEscolhido.valor }} </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </button>
-      <div
-        class="flex flex-col items-center justify-center flex-1"
-        :class="{ 'blur-[1px]': atributoEscolhido }"
-      >
-        <div
-          class="relative w-full flex-1"
-          ref="topDivEl"
-        >
-          <div
-            class="absolute top-0 left-0 w-full h-full flex items-center justify-center overflow-hidden"
-          >
-            <Carta
-              :clicar-atributo="!podeJogar && !atributoEscolhido"
-              :back="virar"
-              v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
-              :modelo="modelo"
-              :carta="cartas?.get(jogo?.[adversario].cartaAtual!)"
-              :width="widthCarta"
-            ></Carta>
-          </div>
-          <div v-if="!animacaoVirar"class="absolute z-20 flex items-center h-full top-0 left-0 overflow-x-hidden" :class="expandSidebar ? 'w-max' : 'w-10'">
-            <div class="w-full my-auto flex flex-col items-stretch bg-gray-800">
-              <button @click="expandSidebar = !expandSidebar" class="bg-gray-700 text-xl p-2 gap-3 mb-px h-10 flex items-center justify-start" type="button">
-                <Bars4Icon class="icon"></Bars4Icon>
-                <div v-if="expandSidebar">
-                  Recolher Menu
-                </div>
-              </button>
-              <button class="bg-gray-700 text-xl p-2 gap-3 mb-px h-10 flex items-center justify-start" type="button">
-                <ViewColumnsIcon class="icon"></ViewColumnsIcon>
-                <div v-if="expandSidebar">
-                  Ver Baralho
-                </div>
-              </button>
-              <button class="bg-gray-700 text-xl p-2 gap-3 mb-px h-10 flex items-center justify-start" type="button">
-                <QuestionMarkCircleIcon class="icon"></QuestionMarkCircleIcon>
-                <div v-if="expandSidebar">
-                  Como Jogar
-                </div>
-              </button>
-              <button class="bg-gray-700 text-xl p-2 gap-3 mb-px h-10 flex items-center justify-start" type="button">
-                <FlagIcon class="icon"></FlagIcon>
-                <div v-if="expandSidebar">
-                  Dessistir
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="flex flex-row items-center gap-4 relative justify-center w-full mt-4">
-          <!-- <Baralho class="absolute left-4 bottom-4" v-if="modelo" :modelo="modelo" :cartas-baralho="jogo?.[0].cartasBaralho"/> -->
-          <Carta
-            v-if="usuario != null && modelo"
-            :class="{'opacity-0': !jogo?.[usuario].cartaAtual}"
-            :modelo="modelo"
-            :carta="cartas?.get(jogo?.[usuario].cartaAtual!)"
-            :clicar-atributo="podeJogar"
-            @click-attr="jogar_atributo"
-            :width="270"
-          ></Carta>
-        </div>
+  <div class="grid grid-cols-[1fr_max-content] bg-gray-800 rounded-b items-stretch justify-center z-50 w-max max-w-lg min-w-[300px] text-lg leading-none">
+    <div class="p-1.5"> {{ jogo?.[usuario ?? 0].nome ?? 'Você' }} </div>
+    <div class="p-1.5"> {{ jogo?.[usuario ?? 0].pontos ?? 0 }} </div>
+    <div class="p-1.5"> {{ jogo?.[adversario ?? 1].nome ?? 'Oponente' }} </div>
+    <div class="p-1.5"> {{ jogo?.[adversario ?? 1].pontos ?? 0 }} </div>
+  </div>
+  <button
+    @click="continueJogo()"
+    class="absolute left-0 top-0 w-full h-full z-20 px-4 bg-black bg-opacity-60"
+    v-if="(atributoEscolhido || jogo?.ganhador != null) && modelo"
+  >
+    <div
+      class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full"
+      v-if="jogo?.ganhador != null"
+    >
+      <div class="text-xl font-normal my-16 text-justify rounded bg-gray-800 p-5">
+        <template v-if="jogo.ganhador === usuario">
+          <h1 class="text-center text-3xl mb-4">Parabéns 🎉<br/></h1>
+          Você mostrou habilidade e estratégia para conquistar essa vitória! Todos os seus esforços valeram a pena, e agora você é o grande campeão.<br/>
+          No curso de Contábeis ou Administração você poderá aperfeiçoar ainda mais seus conhecimentos!!<br/>
+        </template>
+        <template v-else>
+          <h1 class="text-center text-3xl mb-4">💪 Continue firme! 💪<br/></h1>
+          Desta vez a vitória não veio, mas o importante é que você deu o seu melhor e se manteve firme até o final.<br/>
+          No curso de Contábeis ou Administração você poderá aperfeiçoar seus conhecimentos!!<br/>
+        </template>
       </div>
-      <div class="py-3 items-stretch justify-center z-50 px-1">
-        <div class="text-2xl text-center">{{ textoBottomTela }}</div>
+      <vue-particles v-if="jogo.ganhador === usuario" id="tsparticles" :options="particleOptions"/>
+    </div>
+    <div
+      class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full"
+      v-if="atributoEscolhido"
+    >
+      <div class="flex flex-col justify-center items-center flex-1 w-full">
+        <div class="flex flex-col items-center w-full">
+          <div class="text-2xl">Informação da carta do oponente</div>
+          <div
+            v-if="atributoEscolhidoAdversario"
+            :style="{
+              backgroundColor: modelo.cor_atributo_fundo,
+              color: modelo.cor_atributo_texto
+            }"
+            class="flex flex-row justify-between my-1 text-xl w-full"
+          >
+            <span class="p-2"> {{ atributoEscolhidoAdversario.nome }} </span>
+            <span class="p-2"> {{ atributoEscolhidoAdversario.valor }} </span>
+          </div>
+        </div>
+        <div :class="{ 'opacity-0': ganhador == null }" class="text-2xl font-normal my-16">
+          {{ ganhador === usuario ? 'Você ganhou' : 'Você perdeu' }}
+        </div>
+
+        <div class="flex flex-col items-center w-full">
+          <div class="text-2xl">Informação da sua carta</div>
+          <div
+            :style="{
+              backgroundColor: modelo.cor_atributo_fundo,
+              color: modelo.cor_atributo_texto
+            }"
+            class="flex flex-row justify-between my-1 text-xl w-full"
+          >
+            <span class="p-2"> {{ atributoEscolhido.nome }} </span>
+            <span class="p-2"> {{ atributoEscolhido.valor }} </span>
+          </div>
+        </div>
       </div>
     </div>
-  </main>
+  </button>
+  <div
+    class="flex flex-col items-center justify-center flex-1"
+    :class="{ 'blur-[1px]': atributoEscolhido }"
+  >
+    <div class="relative w-full flex-1" ref="topDivEl">
+      <div
+        class="absolute top-0 left-0 w-full h-full flex items-center justify-center overflow-hidden"
+      >
+        <Carta
+          :clicar-atributo="!podeJogar && !atributoEscolhido"
+          :back="virar"
+          v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
+          :modelo="modelo"
+          :carta="cartas?.get(jogo?.[adversario].cartaAtual!)"
+          :width="widthCarta"
+        ></Carta>
+      </div>
+    </div>
+    <div class="flex flex-row items-center gap-4 relative justify-center w-full mt-4">
+      <!-- <Baralho class="absolute left-4 bottom-4" v-if="modelo" :modelo="modelo" :cartas-baralho="jogo?.[0].cartasBaralho"/> -->
+      <Carta
+        v-if="usuario != null && modelo"
+        :class="{ 'opacity-0': !jogo?.[usuario].cartaAtual }"
+        :modelo="modelo"
+        :carta="cartas?.get(jogo?.[usuario].cartaAtual!)"
+        :clicar-atributo="podeJogar"
+        @click-attr="jogar_atributo"
+        :width="270"
+      ></Carta>
+    </div>
+  </div>
+  <div class="py-3 items-stretch justify-center z-50 px-1">
+    <div class="text-2xl text-center">{{ textoBottomTela }}</div>
+  </div>
 </template>
 
 <style>

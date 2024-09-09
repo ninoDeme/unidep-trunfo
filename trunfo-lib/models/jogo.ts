@@ -1,40 +1,9 @@
 import { type CartaTrunfo } from "./carta";
 
-function base64ToBytes(base64: string) {
-  const binString = atob(base64);
-  return new TextDecoder().decode(
-    Uint8Array.from(binString, (m) => m.codePointAt(0)!),
-  );
-}
-
-function bytesToBase64(input: string) {
-  const bytes = new TextEncoder().encode(input);
-  const binString = Array.from(bytes, (byte) =>
-    String.fromCodePoint(byte),
-  ).join("");
-  return btoa(binString);
-}
-
 export type PartidaParams = {
   sala: string;
   id_modelo: number;
   jogador: 0 | 1;
-}
-
-export function decodeGameString(game: string): PartidaParams {
-  let decoded = base64ToBytes(game);
-  let values = decoded.split("|");
-  return {
-    sala: values[0],
-    id_modelo: parseInt(values[1]),
-    jogador: parseInt(values[2]) as 0 | 1,
-  };
-}
-
-export function encodeGameString(params: PartidaParams) {
-  let { sala, id_modelo, jogador } = params;
-  let encoded = bytesToBase64([sala, id_modelo, jogador].join('|'));
-  return encoded;
 }
 
 export function getJogadorAtual(jogo: JogoState): 0 | 1 {
@@ -57,7 +26,6 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
     throw new Error("Jogador não possuí mais cartas")
   }
   let carta_jogada = cartas?.get(jogadorAtualObj.cartaAtual)
-  console.log(id_carta, carta_jogada)
   if (!carta_jogada || carta_jogada.id_carta !== id_carta) {
     throw new Error("Jogo Dessíncronizado")
   }
@@ -137,18 +105,18 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
   let jogador_0 = [...jogo[0].cartasBaralho]
   let jogador_1 = [...jogo[1].cartasBaralho]
   let ganhadorJogo: 1 | 0 | null = null
+  let pontos_0 = jogo[0].pontos;
+  let pontos_1 = jogo[1].pontos;
   if (ganhador === 0) {
-    if (jogador_1.length <= 1) {
-      ganhadorJogo = 0
-    } else {
-      jogador_0.unshift(jogo[1].cartaAtual!)
+    pontos_0++;
+    if (pontos_0 === 5) {
+      ganhadorJogo = 0;
     }
   }
   if (ganhador === 1) {
-    if (jogador_0.length <= 1) {
-      ganhadorJogo = 1
-    } else {
-      jogador_1.unshift(jogo[0].cartaAtual!)
+    pontos_1++;
+    if (pontos_1 === 5) {
+      ganhadorJogo = 1;
     }
   }
   let jogada = {
@@ -171,11 +139,13 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
       ganhador: ganhadorJogo,
       0: {
         ...jogo[0],
+        pontos: pontos_0,
         cartaAtual: jogador_0.pop() ?? null,
         cartasBaralho: jogador_0
       },
       1: {
         ...jogo[1],
+        pontos: pontos_1,
         cartaAtual: jogador_1.pop() ?? null,
         cartasBaralho: jogador_1
       },
@@ -187,6 +157,7 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
 
 export type JogadorState = {
   nome: string | null
+  pontos: number
   cartaAtual: number | null
   cartasBaralho: number[]
 }

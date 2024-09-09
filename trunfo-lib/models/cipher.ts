@@ -1,7 +1,7 @@
 // A Javascript implementaion of the "xor128" prng algorithm by
 // George Marsaglia.  See http://www.jstatsoft.org/v08/i14/paper
 
-class XorGen {
+export class XorGen {
   x = 0
   y = 0
   z = 0
@@ -125,7 +125,7 @@ export function encrypt(input: string, seed: number = 1235) {
   let checksum = input[input.length - 1]
   let n = base26Tobase10(encrypted)
   let maxBinLen = getMaxBase26(encrypted.length)
-  if (n > parseInt(maxBinLen, 2)) throw new Error();
+  if (n > parseInt(maxBinLen, 2)) throw new Error('Código inválido');
 
   let [key, bit_mask] = genKeyAndMask(maxBinLen.length, seed + CHARS_MAP.get(checksum)!)
   n = n ^ bit_mask
@@ -142,7 +142,7 @@ export function decrypt(input: string, seed: number = 1235) {
   let checksum = input[input.length - 1]
   let n = base26Tobase10(encrypted)
   let maxBinLen = getMaxBase26(encrypted.length)
-  if (n > parseInt(maxBinLen, 2)) throw new Error();
+  if (n > parseInt(maxBinLen, 2)) throw new Error('Código inválido');
 
   let [key, bit_mask] = genKeyAndMask(maxBinLen.length, seed + CHARS_MAP.get(checksum)!)
   let res: string[] = []
@@ -154,3 +154,11 @@ export function decrypt(input: string, seed: number = 1235) {
   resNumber = resNumber ^ bit_mask
   return base10Tobase26(resNumber).padStart(encrypted.length, 'a') + checksum
 }
+
+const TrunfoCrypt = {
+  decrypt,
+  encrypt,
+  XorGen
+}
+
+export default TrunfoCrypt

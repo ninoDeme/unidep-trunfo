@@ -1,3 +1,5 @@
+import TrunfoCrypt from "./cipher"
+
 const CHARS = 'abcdefghijklmnopqrstuvwxyz'
 const CHARS_MAP = new Map([...CHARS].map((c, i) => [c, i]))
 
@@ -45,6 +47,7 @@ export function generateCheckSum(code: string) {
 }
 
 export function decodeCodigo(code: string) {
+  code = TrunfoCrypt.decrypt(code.toLowerCase());
   let sala = code.substring(0, code.length - 1);
   let checksum = code[code.length - 1]
   let jogador: 0 | 1 = 0

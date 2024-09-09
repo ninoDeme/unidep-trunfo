@@ -22,11 +22,32 @@ const emit = defineEmits<{
     :style="{ width: `${width ?? 500}px`, height: `${((width ?? 500) / 500) * 660}px` }"
   >
     <div class="absolute left-0 top-0 w-full h-full costas">
-      <img
-        class="carta rounded-xl border-white border-[5px] bg-white object-cover origin-top-left max-w-none"
-        src="@/assets/carta_back.svg"
-        :style="{ transform: !width ? undefined : `scale3d(${width / 500}, ${width / 500}, 1)` }"
-      />
+      <div
+        class="border-[5px] border-white rounded-xl flex flex-col carta origin-top-left select-none"
+        :style="{
+          transform: !width ? undefined : `scale3d(${width / 500}, ${width / 500}, 1)`,
+          background: modelo.cor_atributo_fundo,
+          color: modelo.cor_atributo_texto
+        }"
+      >
+        <div class="w-full text-3xl p-2">{{ carta?.nome ?? 'Nome da carta' }}</div>
+        <img
+          v-if="carta"
+          class="aspect-[16/8] bg-gray-500 border-white border-b-[4px] border-t-[4px] object-cover w-full"
+          :src="carta?.img ?? `/uploads/carta/carta-${carta?.id_carta}.webp`"
+        />
+        <img
+          v-else
+          class="aspect-[16/8] bg-gray-500 border-white border-b-[4px] border-t-[4px] w-full"
+        />
+        <div class="m-8 mt-3 p-3">
+          <p v-if="carta && carta.descricao" class="text-lg" v-html="carta.descricao">
+          </p>
+          <p v-else class="text-lg">
+            Descrição da carta Descrição da carta Descrição da carta Descrição da carta
+          </p>
+        </div>
+      </div>
     </div>
     <div
       class="border-[5px] border-white rounded-xl flex flex-col carta origin-top-left select-none"
@@ -39,12 +60,12 @@ const emit = defineEmits<{
       <div class="w-full text-3xl p-2">{{ carta?.nome ?? 'Nome da carta' }}</div>
       <img
         v-if="carta"
-        class="aspect-video bg-gray-500 border-white border-b-[4px] border-t-[4px] object-cover w-full"
+        class="aspect-[16/8] bg-gray-500 border-white border-b-[4px] border-t-[4px] object-cover w-full"
         :src="carta?.img ?? `/uploads/carta/carta-${carta?.id_carta}.webp`"
       />
       <img
         v-else
-        class="aspect-video bg-gray-500 border-white border-b-[4px] border-t-[4px] w-full"
+        class="aspect-[16/8] bg-gray-500 border-white border-b-[4px] border-t-[4px] w-full"
       />
       <div class="m-8 mb-3">
         <button
@@ -61,18 +82,6 @@ const emit = defineEmits<{
       </div>
 
       <div class="flex-1"></div>
-      <div
-        v-if="!carta || carta.descricao"
-        :style="{ backgroundColor: modelo.cor_atributo_fundo, color: modelo.cor_atributo_texto }"
-        class="m-8 mt-3 p-3"
-      >
-        <p v-if="carta && carta.descricao" class="text-base">
-          {{ carta.descricao }}
-        </p>
-        <p v-else class="text-base">
-          Descrição da carta Descrição da carta Descrição da carta Descrição da carta
-        </p>
-      </div>
     </div>
   </div>
 </template>

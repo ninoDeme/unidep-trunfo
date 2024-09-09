@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { CartaTrunfo } from 'trunfo-lib/models/carta'
 import type { Modelo } from 'trunfo-lib/models/modelo'
 import UploadFiles from './UploadFiles.vue'
@@ -20,9 +20,16 @@ function setImg(input: File) {
 const emit = defineEmits<{
   salvar: [value: CartaTrunfo]
   cancelar: []
+  descricaoFocada: [value: boolean]
 }>()
 
 const loadingSalvar = ref(false)
+
+const podeSalvar = computed(() => {
+  if (!carta.value.nome) return false
+  if (!carta.value.descricao) return false
+  return true
+})
 
 async function salvar() {
   loadingSalvar.value = true
@@ -99,24 +106,15 @@ async function salvar() {
     </div>
     <div class="flex flex-col items-start w-full">
       <label for="descricao-modelo" class="text-base">Descrição</label>
-      <input
+      <textarea
         name="descricao"
+        @focus="emit('descricaoFocada', true)"
+        @blur="emit('descricaoFocada', false)"
         type="text"
         required
         v-model.trim="carta.descricao"
         id="descricao-modelo"
-        class="input-trunfo"
-      />
-    </div>
-    <div class="flex flex-col items-start w-full">
-      <label for="super_trunfo-modelo" class="text-base">Super Trunfo</label>
-      <input
-        name="super_trunfo"
-        type="checkbox"
-        required
-        v-model="carta.super_trunfo"
-        id="super_trunfo-modelo"
-        class="input-trunfo"
+        class="input-trunfo w-full text-lg"
       />
     </div>
     <UploadFiles
@@ -158,7 +156,7 @@ async function salvar() {
       <button
         class="rounded border-gray-300 border p-2 text-xl"
         type="submit"
-        :disabled="loadingSalvar"
+        :disabled="loadingSalvar || !podeSalvar"
         @click.prevent="salvar()"
       >
         Salvar
@@ -167,4 +165,5 @@ async function salvar() {
   </form>
 </template>
 
-<style scoped></style>
+<style scoped>
+</style>

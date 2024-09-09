@@ -4,6 +4,7 @@ import { getAllCartas } from './carta'
 import { CartaTrunfo } from 'trunfo-lib/models/carta'
 import { Modelo } from 'trunfo-lib/models/modelo'
 import { decodeCodigo, generateCodigo, generateLast } from 'trunfo-lib/models/codigo'
+import TrunfoCrypt from 'trunfo-lib/models/cipher'
 import { getAllModelos } from './modelo'
 import { WebSocket } from 'ws'
 import {
@@ -65,11 +66,13 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
     let res: JogoState = {
       0: {
         nome: null,
+        pontos: 0,
         cartaAtual: cartasJogador0.pop()!,
         cartasBaralho: cartasJogador0
       },
       1: {
         nome: null,
+        pontos: 0,
         cartaAtual: cartasJogador1.pop()!,
         cartasBaralho: cartasJogador1
       },
@@ -88,7 +91,7 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
     }
   }>('/ws/:partida', { websocket: true }, async (socket, request) => {
     let partida = request.params.partida
-    let info_partida = decodeCodigo(partida)
+    let info_partida = decodeCodigo(partida.replaceAll(/D/g, ''))
     if (!info_partida) {
       return socket.close(1000, 'Código Invalido')
     }
@@ -128,6 +131,7 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
       } else {
         sala.timeoutClose = setTimeout(
           () => {
+              console.log("FECHOOOOOOOOOOOU")
             salas.set(info_partida.sala, true)
           },
           60 * 10 * 1000
@@ -226,7 +230,7 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
             jogo: sala.jogo_state,
             oponente_conectado: !!sala[oponente],
             codigo_oponente:
-              info_partida.sala + generateLast(info_partida.sala, info_partida.jogador ? 0 : 1),
+              TrunfoCrypt.encrypt(info_partida.sala + generateLast(info_partida.sala, info_partida.jogador ? 0 : 1)),
             jogador: info_partida.jogador
           }
         })
@@ -259,7 +263,10 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
     const codigo0 = number + generateLast(number, 0)
     const codigo1 = number + generateLast(number, 1)
 
-    response.send({ 0: codigo0, 1: codigo1 })
+    response.send({
+      0: TrunfoCrypt.encrypt(codigo0),
+      1: TrunfoCrypt.encrypt(codigo1)
+    })
   })
 }
 

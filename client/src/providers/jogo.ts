@@ -14,6 +14,7 @@ export function useJogo(partidaString: string, nome?: string) {
   const jogo = ref<JogoState | null>(null)
   const loadingJogo = ref<boolean>(false)
   const errorJogo = ref<string | null>(null)
+  const errorFatal = ref<string | null>(null)
   const errorConexao = ref<string | null>(null)
   const oponenteConectado = ref<boolean>(false)
   const jogadaOponente = ref<Jogada | null>(null)
@@ -22,19 +23,18 @@ export function useJogo(partidaString: string, nome?: string) {
   let socket: null | WebSocket = null
   const codigoOponente = ref<null | string>(null)
 
-  async function getJogo(partidaString: string, nome?: string) {
+  async function getJogo() {
     try {
       currPartStr = partidaString
       jogo.value = null
       loadingJogo.value = true
+      errorConexao.value = null;
 
       socket = new WebSocket('/api/jogo/ws/' + partidaString)
 
-      await new Promise<void>((resolve) => (socket!.onopen = () => resolve()))
-
       socket.onerror = (e) => {
         console.error(e)
-        errorJogo.value = (e as any).message
+        errorConexao.value = (e as any).message
       }
 
       socket.onmessage = (ev) => {
@@ -47,10 +47,15 @@ export function useJogo(partidaString: string, nome?: string) {
 
       socket.onclose = (e) => {
         console.log(e)
-        if (!errorConexao.value) {
+        if (e.code === 1006 || !e.reason) {
           errorConexao.value = e.reason || 'Ocoreu um erro, tente novamente mais tarde'
+          console.log(errorConexao.value)
+        } else if (!errorFatal.value) {
+          errorFatal.value = e.reason
         }
       }
+
+      await new Promise<void>((resolve) => (socket!.onopen = () => resolve()))
 
       if (nome) {
         socket.send(
@@ -64,12 +69,12 @@ export function useJogo(partidaString: string, nome?: string) {
       return jogo.value
     } catch (e) {
       if (e instanceof Error) {
-        errorConexao.value = e.message
+        errorFatal.value = e.message
       } else {
-        errorConexao.value = 'Não foi possível conectar, tente novamente mais tarde'
+        errorFatal.value = 'Não foi possível conectar, tente novamente mais tarde'
       }
       if (socket) {
-        socket.close(1000, 'Erro inesperado: ' + errorConexao)
+        socket.close(1000, 'Erro inesperado: ' + errorFatal)
       }
       throw e
     } finally {
@@ -149,7 +154,7 @@ export function useJogo(partidaString: string, nome?: string) {
     }
   }
   if (!socket && !currPartStr) {
-    getJogo(partidaString, nome)
+    getJogo()
   }
   return {
     jogo,
@@ -161,6 +166,7 @@ export function useJogo(partidaString: string, nome?: string) {
     oponenteConectado,
     codigoOponente,
     jogadaOponente,
-    errorConexao
+    errorConexao,
+    errorFatal
   }
 }
