@@ -3,12 +3,6 @@ import Carta from '@/components/Carta.vue'
 import { useCartas } from '@/providers/cartas'
 import { type UseJogoReturn } from '@/providers/jogo'
 import { useModelos } from '@/providers/modelos'
-import {
-  Bars4Icon,
-  FlagIcon,
-  QuestionMarkCircleIcon,
-  ViewColumnsIcon
-} from '@heroicons/vue/24/outline'
 import type { CartaTrunfoAtributo } from 'trunfo-lib/models/carta'
 import { jogar, type Jogada, type JogoState } from 'trunfo-lib/models/jogo'
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -88,6 +82,12 @@ watch(
     if (!jogadaOponente.value) return
     if (!jogo.value) return
     if (cartas.value === null) return
+    if (nextJogoState.value) {
+      jogo.value = nextJogoState.value
+      nextJogoState.value = null
+      atributoEscolhido.value = null
+      virar.value = true
+    }
 
     let [jogoState, jogada] = jogar(
       {
@@ -128,10 +128,6 @@ function continueJogo() {
     setTimeout(() => {
       animacaoVirar.value = true
     }, 250)
-  }
-
-  if (jogo.value?.ganhador != null) {
-    router.push('/')
   }
 }
 
@@ -200,13 +196,15 @@ const particleOptions = {
 </script>
 
 <template>
-  <div class="grid grid-cols-[1fr_max-content] bg-gray-800 rounded-b items-stretch justify-center z-50 w-max max-w-lg min-w-[300px] text-lg leading-none">
-    <div class="p-1.5"> {{ jogo?.[usuario ?? 0].nome ?? 'Você' }} </div>
-    <div class="p-1.5"> {{ jogo?.[usuario ?? 0].pontos ?? 0 }} </div>
-    <div class="p-1.5"> {{ jogo?.[adversario ?? 1].nome ?? 'Oponente' }} </div>
-    <div class="p-1.5"> {{ jogo?.[adversario ?? 1].pontos ?? 0 }} </div>
+  <div
+    class="grid grid-cols-[1fr_max-content] bg-gray-800 rounded-b items-stretch justify-center z-50 w-max max-w-lg min-w-[300px] text-lg leading-none"
+  >
+    <div class="p-1.5">{{ jogo?.[usuario ?? 0].nome ?? 'Você' }}</div>
+    <div class="p-1.5">{{ jogo?.[usuario ?? 0].pontos ?? 0 }}</div>
+    <div class="p-1.5">{{ jogo?.[adversario ?? 1].nome ?? 'Oponente' }}</div>
+    <div class="p-1.5">{{ jogo?.[adversario ?? 1].pontos ?? 0 }}</div>
   </div>
-  <button
+  <div
     @click="continueJogo()"
     class="absolute left-0 top-0 w-full h-full z-20 px-4 bg-black bg-opacity-60"
     v-if="(atributoEscolhido || jogo?.ganhador != null) && modelo"
@@ -215,19 +213,25 @@ const particleOptions = {
       class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full"
       v-if="jogo?.ganhador != null"
     >
-      <div class="text-xl font-normal my-16 text-justify rounded bg-gray-800 p-5">
+      <button
+        class="text-xl font-normal my-16 text-justify rounded bg-gray-800 p-5"
+        @click="router.push('/')"
+      >
         <template v-if="jogo.ganhador === usuario">
-          <h1 class="text-center text-3xl mb-4">Parabéns 🎉<br/></h1>
-          Você mostrou habilidade e estratégia para conquistar essa vitória! Todos os seus esforços valeram a pena, e agora você é o grande campeão.<br/>
-          No curso de Contábeis ou Administração você poderá aperfeiçoar ainda mais seus conhecimentos!!<br/>
+          <h1 class="text-center text-3xl mb-4">Parabéns 🎉<br /></h1>
+          Você mostrou habilidade e estratégia para conquistar essa vitória! Todos os seus esforços
+          valeram a pena, e agora você é o grande campeão.<br />
+          No curso de Contábeis ou Administração você poderá aperfeiçoar ainda mais seus
+          conhecimentos!!<br />
         </template>
         <template v-else>
-          <h1 class="text-center text-3xl mb-4">💪 Continue firme! 💪<br/></h1>
-          Desta vez a vitória não veio, mas o importante é que você deu o seu melhor e se manteve firme até o final.<br/>
-          No curso de Contábeis ou Administração você poderá aperfeiçoar seus conhecimentos!!<br/>
+          <h1 class="text-center text-3xl mb-4">💪 Continue firme! 💪<br /></h1>
+          Desta vez a vitória não veio, mas o importante é que você deu o seu melhor e se manteve
+          firme até o final.<br />
+          No curso de Contábeis ou Administração você poderá aperfeiçoar seus conhecimentos!!<br />
         </template>
-      </div>
-      <vue-particles v-if="jogo.ganhador === usuario" id="tsparticles" :options="particleOptions"/>
+      </button>
+      <vue-particles v-if="jogo.ganhador === usuario" id="tsparticles" :options="particleOptions" />
     </div>
     <div
       class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full"
@@ -245,11 +249,11 @@ const particleOptions = {
             class="flex flex-row justify-between my-1 text-xl w-full"
           >
             <span class="p-2"> {{ atributoEscolhidoAdversario.nome }} </span>
-            <span class="p-2"> {{ atributoEscolhidoAdversario.valor }} </span>
+            <span class="p-2"> {{ atributoEscolhidoAdversario.tipo === 1 ? atributoEscolhidoAdversario.valor : atributoEscolhidoAdversario.valor.toLocaleString() }} </span>
           </div>
         </div>
         <div :class="{ 'opacity-0': ganhador == null }" class="text-2xl font-normal my-16">
-          {{ ganhador === usuario ? 'Você ganhou' : 'Você perdeu' }}
+          {{ ganhador === 2 ? 'Empate!' : ganhador === usuario ? 'Você ganhou' : 'Você perdeu' }}
         </div>
 
         <div class="flex flex-col items-center w-full">
@@ -262,12 +266,12 @@ const particleOptions = {
             class="flex flex-row justify-between my-1 text-xl w-full"
           >
             <span class="p-2"> {{ atributoEscolhido.nome }} </span>
-            <span class="p-2"> {{ atributoEscolhido.valor }} </span>
+            <span class="p-2"> {{ atributoEscolhido.tipo === 1 ? atributoEscolhido.valor : atributoEscolhido.valor.toLocaleString() }} </span>
           </div>
         </div>
       </div>
     </div>
-  </button>
+  </div>
   <div
     class="flex flex-col items-center justify-center flex-1"
     :class="{ 'blur-[1px]': atributoEscolhido }"
@@ -277,7 +281,7 @@ const particleOptions = {
         class="absolute top-0 left-0 w-full h-full flex items-center justify-center overflow-hidden"
       >
         <Carta
-          :clicar-atributo="!podeJogar && !atributoEscolhido"
+          :clicar-atributo="false"
           :back="virar"
           v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
           :modelo="modelo"

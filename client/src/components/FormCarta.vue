@@ -117,6 +117,17 @@ async function salvar() {
         class="input-trunfo w-full text-lg"
       />
     </div>
+    <div class="flex flex-col items-start w-full">
+      <label for="mini-modelo" class="text-base">Mini</label>
+      <input
+        name="mini"
+        type="number"
+        required
+        v-model="carta.mini"
+        id="mini-modelo"
+        class="input-trunfo"
+      />
+    </div>
     <UploadFiles
       accept="image/*"
       label="Imagem da Carta"

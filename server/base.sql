@@ -22,6 +22,7 @@ CREATE TABLE carta (
   descricao TEXT,
   super_trunfo INTEGER DEFAULT 0,
   id_modelo INTEGER NOT NULL,
+  mini INTEGER,
   FOREIGN KEY(id_modelo) REFERENCES modelo(id_modelo)
 );
 

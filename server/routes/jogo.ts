@@ -54,14 +54,28 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
     return jogo
   }
 
-  function initJogoState(all_cartas: CartaTrunfo[], modelo: Modelo): JogoState {
-    let cartas = all_cartas.map((c) => c.id_carta).sort(() => Math.random() * 2 - 1)
-    if (cartas.length % 2 === 1) {
-      cartas.pop()
+  function generateMaosJogadores(all_cartas: CartaTrunfo[]) {
+    let arr1: number[] = [];
+    let arr2: number[] = [];
+    while (all_cartas.length > 1) {
+      let carta = (all_cartas.splice(Math.floor(Math.random() * all_cartas.length), 1)[0])
+      let mini_arr = all_cartas.map((c, i) => c.mini === carta.mini ? i : null).filter(c => c != null);
+      if (mini_arr.length > 0) {
+        let carta2Index = mini_arr[Math.floor(Math.random() * mini_arr.length)]
+        let carta2 = all_cartas.splice(carta2Index, 1)[0]
+        arr1.push(carta.id_carta);
+        arr2.push(carta2.id_carta);
+      }
     }
-
-    let cartasJogador0 = cartas.slice(0, cartas.length / 2)
-    let cartasJogador1 = cartas.slice(cartas.length / 2)
+    return [arr1, arr2];
+  }
+  function initJogoState(all_cartas: CartaTrunfo[], modelo: Modelo): JogoState {
+    let [cartasJogador0, cartasJogador1] = generateMaosJogadores([...all_cartas]);
+    for (let i = 0; i < 5; i++) {
+      let [cartasJogador01, cartasJogador11] = generateMaosJogadores([...all_cartas]);
+      cartasJogador0.push(...cartasJogador01);
+      cartasJogador1.push(...cartasJogador11);
+    }
 
     let res: JogoState = {
       0: {
@@ -77,7 +91,6 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
         cartasBaralho: cartasJogador1
       },
       jogadas: [],
-      monte: [],
       id_modelo: modelo.id_modelo,
       ganhador: null
     }
@@ -131,7 +144,7 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
       } else {
         sala.timeoutClose = setTimeout(
           () => {
-              console.log("FECHOOOOOOOOOOOU")
+            console.log("FECHOOOOOOOOOOOU")
             salas.set(info_partida.sala, true)
           },
           60 * 10 * 1000

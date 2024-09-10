@@ -33,7 +33,8 @@ export async function getAllCartas(fastify: FastifyInstance) {
           c.nome,
           c.descricao,
           c.super_trunfo,
-          c.id_modelo
+          c.id_modelo,
+          c.mini
         FROM carta c
     `);
 
@@ -78,14 +79,16 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
               nome,
               descricao,
               super_trunfo,
-              id_modelo
-            ) VALUES (?, ?, ?, ?, ?)`,
+              id_modelo,
+              mini
+            ) VALUES (?, ?, ?, ?, ?, ?)`,
       [
         carta.id_carta,
         carta.nome,
         carta.descricao,
         carta.super_trunfo,
         carta.id_modelo,
+        carta.mini ?? 0
       ],
     );
 

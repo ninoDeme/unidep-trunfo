@@ -58,18 +58,10 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
   }
 
   if (ganhador == null) {
-    let monte = [...jogo.monte, jogadorAtualObj.cartaAtual, jogador_defendente.cartaAtual]
     let jogador_0 = [...jogo[0].cartasBaralho]
     let jogador_1 = [...jogo[1].cartasBaralho]
     let ganhadorJogo: 0 | 1 | null = null
-    if (jogador_0.length === 0) {
-      ganhadorJogo = 1
-    }
-    if (jogador_1.length === 0) {
-      ganhadorJogo = 0
-    }
     let jogada = {
-      monte,
       ganhador: null,
       jogador: {
         jogador,
@@ -84,7 +76,6 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
     return [
       {
         ...jogo,
-        monte,
         0: {
           ...jogo[0],
           cartaAtual: jogador_0.pop()!,
@@ -120,7 +111,6 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
     }
   }
   let jogada = {
-    monte: [],
     ganhador,
     jogador: {
       jogador,
@@ -135,7 +125,6 @@ export function jogar(jogada_p: { jogador: 0 | 1, id_carta: number, id_modelo_at
   return [
     {
       ...jogo,
-      monte: [],
       ganhador: ganhadorJogo,
       0: {
         ...jogo[0],
@@ -173,7 +162,6 @@ export type Jogada = {
     id_model_atributo: number
     id_carta: number
   }
-  monte: number[]
 }
 
 export interface JogoState {
@@ -182,8 +170,6 @@ export interface JogoState {
 
   jogadas: Jogada[]
   id_modelo: number
-
-  monte: number[]
 
   ganhador: 0 | 1 | null
 }

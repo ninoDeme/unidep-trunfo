@@ -11,6 +11,7 @@ export interface CartaTrunfo {
   descricao?: string;
   super_trunfo: boolean;
   atributos: CartaTrunfoAtributo[];
+  mini: number;
   id_modelo: number;
 }
 
@@ -31,6 +32,7 @@ export function novaCarta(modelo: Modelo, data?: Partial<CartaTrunfo>): CartaTru
     img: data?.img ?? undefined,
     descricao: data?.descricao ?? undefined,
     super_trunfo: data?.super_trunfo ?? false,
+    mini: data?.mini ?? 0,
     atributos: modelo?.atributos?.map((v, i) => novoAtributo(v, data?.atributos?.find(a => a.id_modelo_atributo === v.id_modelo_atributo))) ?? []
   }
 }
