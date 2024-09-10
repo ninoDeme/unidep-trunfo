@@ -66,13 +66,12 @@ async function routes(fastify: FastifyInstance, _options: unknown) {
 
     await fastify.db.run(
       `
-      DELETE FROM carta_atributo as ca
-      WHERE ? in (SELECT id_modelo FROM carta JOIN modelo USING(id_modelo) WHERE id_carta = ca.id_carta)
-          AND id_modelo_atributo not in (?)
+      DELETE FROM carta_atributo ca
+      LEFT JOIN carta c USING(id_carta)
+      WHERE c.id_modelo = ? AND ca.id_modelo_atributo not in (${modelo.atributos.map((attr) => attr.id_modelo_atributo).join(`, `)})
     `,
       [
         modelo.id_modelo,
-        modelo.atributos.map((attr) => attr.id_modelo_atributo),
       ],
     );
     await fastify.db.run(

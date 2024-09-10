@@ -35,7 +35,7 @@ export function novoModeloAtributo(ordem: number, data?: Partial<ModeloAtributo>
   return {
     id_modelo_atributo: data?.id_modelo_atributo ?? gerarIdModelo(),
     nome: data?.nome ?? 'Novo Atributo',
-    tipo: 0,
+    tipo: data?.tipo ?? 0,
     ordem,
   }
 }
