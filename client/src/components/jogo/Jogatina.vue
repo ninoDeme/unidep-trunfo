@@ -170,7 +170,6 @@ const textoBottomTela = computed(() => {
 const topDivEl = ref<null | HTMLElement>(null)
 const widthCarta = ref(250)
 let resizeObs: ResizeObserver | null = null
-let expandSidebar = ref(false)
 
 onMounted(() => {
   if (!topDivEl.value) return
@@ -199,9 +198,12 @@ const particleOptions = {
   <div
     class="grid grid-cols-[1fr_max-content] bg-gray-800 rounded-b items-stretch justify-center z-50 w-max max-w-lg min-w-[300px] text-lg leading-none"
   >
-    <div class="p-1.5">{{ jogo?.[usuario ?? 0].nome ?? 'Você' }}</div>
+    <div class="p-1.5" v-if="jogo?.[usuario ?? 0].nome"> {{ jogo?.[usuario ?? 0].nome }} <span class="text-md">(Você)</span> </div>
+    <div class="p-1.5" v-else> Você </div>
     <div class="p-1.5">{{ jogo?.[usuario ?? 0].pontos ?? 0 }}</div>
-    <div class="p-1.5">{{ jogo?.[adversario ?? 1].nome ?? 'Oponente' }}</div>
+
+    <div class="p-1.5" v-if="jogo?.[adversario ?? 1].nome"> {{ jogo?.[adversario ?? 1].nome }} <span class="text-md">(Oponente)</span> </div>
+    <div class="p-1.5" v-else> Oponente </div>
     <div class="p-1.5">{{ jogo?.[adversario ?? 1].pontos ?? 0 }}</div>
   </div>
   <div

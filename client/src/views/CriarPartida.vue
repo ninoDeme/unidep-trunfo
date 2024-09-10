@@ -4,6 +4,7 @@ import { useNome } from '@/providers/nome'
 import type { Modelo } from 'trunfo-lib/models/modelo'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue3-toastify'
 
 let { modelos, loadingModelos } = useModelos(true)
 
@@ -31,7 +32,15 @@ async function criarSala(id_modelo: number) {
   }).then((r) => {
     if (!r.ok) throw new Error('Não foi possível criar a sala')
     return r.json()
-  })
+    }).catch(e => {
+      toast(e.message, {
+        theme: 'colored',
+        type: 'error',
+        position: 'bottom-center',
+        transition: 'slide'
+      })
+      console.error(e)
+    })
 }
 
 async function savePartida() {
