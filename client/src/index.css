@@ -18,7 +18,7 @@ body {
 .input-trunfo {
   background: rgba(100, 100, 100, .2);
   border-bottom: 1px solid white;
-  padding: 2px
+  padding: 6px
 }
 
 button[disabled]:not(.not-opacity-disabled) {

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Conectar from '../views/Conectar.vue'
+import Menu from '../views/Menu.vue'
 import Jogo from '@/views/Jogo.vue'
 import CriarPartida from '@/views/CriarPartida.vue'
 import SeJuntar from '@/views/SeJuntar.vue'
@@ -10,7 +10,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: Conectar
+      component: Menu
     },
     {
       path: '/se-juntar',
@@ -29,7 +29,6 @@ const router = createRouter({
     },
     {
       path: '/criador',
-      name: 'criador',
       children: [
         {
           path: 'modelo',
