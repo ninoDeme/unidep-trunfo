@@ -3,7 +3,7 @@ import Carta from '@/components/Carta.vue'
 import { useCartas } from '@/providers/cartas'
 import { type UseJogoReturn } from '@/providers/jogo'
 import { useModelos } from '@/providers/modelos'
-import type { CartaTrunfoAtributo } from 'trunfo-lib/models/carta'
+import type { CartaTrunfo, CartaTrunfoAtributo } from 'trunfo-lib/models/carta'
 import { jogar, type Jogada, type JogoState } from 'trunfo-lib/models/jogo'
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -169,7 +169,10 @@ const textoBottomTela = computed(() => {
 
 const topDivEl = ref<null | HTMLElement>(null)
 const widthCarta = ref(250)
+const widthCartaGrande = ref(Math.min(window.innerWidth, 575))
 let resizeObs: ResizeObserver | null = null
+
+const listener = () => (widthCartaGrande.value = Math.min(window.innerWidth, 575))
 
 onMounted(() => {
   if (!topDivEl.value) return
@@ -179,9 +182,11 @@ onMounted(() => {
   })
   resizeObs.observe(topDivEl.value)
   widthCarta.value = Math.min((topDivEl.value.clientHeight / 660) * 500 - 10, 270)
+  window.addEventListener('resize', listener)
 })
 onUnmounted(() => {
   resizeObs?.disconnect()
+  window.removeEventListener('resize', listener)
 })
 
 const particleOptions = {
@@ -192,24 +197,35 @@ const particleOptions = {
   },
   preset: 'confetti'
 }
+
+const cartaDestaque = ref<null | CartaTrunfo>(null)
 </script>
 
 <template>
   <div
     class="grid grid-cols-[1fr_max-content] bg-gray-800 rounded-b items-stretch justify-center z-50 w-max max-w-lg min-w-[300px] text-lg leading-none"
   >
-    <div class="p-1.5" v-if="jogo?.[usuario ?? 0].nome"> {{ jogo?.[usuario ?? 0].nome }} <span class="text-md">(Você)</span> </div>
-    <div class="p-1.5" v-else> Você </div>
+    <div class="p-1.5" v-if="jogo?.[usuario ?? 0].nome">
+      {{ jogo?.[usuario ?? 0].nome }} <span class="text-md">(Você)</span>
+    </div>
+    <div class="p-1.5" v-else>Você</div>
     <div class="p-1.5">{{ jogo?.[usuario ?? 0].pontos ?? 0 }}</div>
 
-    <div class="p-1.5" v-if="jogo?.[adversario ?? 1].nome"> {{ jogo?.[adversario ?? 1].nome }} <span class="text-md">(Oponente)</span> </div>
-    <div class="p-1.5" v-else> Oponente </div>
+    <div class="p-1.5" v-if="jogo?.[adversario ?? 1].nome">
+      {{ jogo?.[adversario ?? 1].nome }} <span class="text-md">(Oponente)</span>
+    </div>
+    <div class="p-1.5" v-else>Oponente</div>
     <div class="p-1.5">{{ jogo?.[adversario ?? 1].pontos ?? 0 }}</div>
   </div>
   <div
-    @click="continueJogo()"
+    @click="
+      () => {
+        continueJogo()
+        cartaDestaque = null
+      }
+    "
     class="absolute left-0 top-0 w-full h-full z-20 px-4 bg-black bg-opacity-60"
-    v-if="(atributoEscolhido || jogo?.ganhador != null) && modelo"
+    v-if="(atributoEscolhido || jogo?.ganhador != null || cartaDestaque != null) && modelo"
   >
     <div
       class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full"
@@ -237,7 +253,7 @@ const particleOptions = {
     </div>
     <div
       class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full"
-      v-if="atributoEscolhido"
+      v-else-if="atributoEscolhido"
     >
       <div class="flex flex-col justify-center items-center flex-1 w-full">
         <div class="flex flex-col items-center w-full">
@@ -251,7 +267,13 @@ const particleOptions = {
             class="flex flex-row justify-between my-1 text-xl w-full"
           >
             <span class="p-2"> {{ atributoEscolhidoAdversario.nome }} </span>
-            <span class="p-2"> {{ atributoEscolhidoAdversario.tipo === 1 ? atributoEscolhidoAdversario.valor : atributoEscolhidoAdversario.valor.toLocaleString() }} </span>
+            <span class="p-2">
+              {{
+                atributoEscolhidoAdversario.tipo === 1
+                  ? atributoEscolhidoAdversario.valor
+                  : atributoEscolhidoAdversario.valor.toLocaleString()
+              }}
+            </span>
           </div>
         </div>
         <div :class="{ 'opacity-0': ganhador == null }" class="text-2xl font-normal my-16">
@@ -268,10 +290,29 @@ const particleOptions = {
             class="flex flex-row justify-between my-1 text-xl w-full"
           >
             <span class="p-2"> {{ atributoEscolhido.nome }} </span>
-            <span class="p-2"> {{ atributoEscolhido.tipo === 1 ? atributoEscolhido.valor : atributoEscolhido.valor.toLocaleString() }} </span>
+            <span class="p-2">
+              {{
+                atributoEscolhido.tipo === 1
+                  ? atributoEscolhido.valor
+                  : atributoEscolhido.valor.toLocaleString()
+              }}
+            </span>
           </div>
         </div>
       </div>
+    </div>
+    <div
+      v-else-if="cartaDestaque"
+      class="flex flex-col justify-center items-center max-w-xl mx-auto w-full h-full"
+    >
+      <Carta
+        :clicar-atributo="false"
+        :back="virar"
+        v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
+        :modelo="modelo"
+        :carta="cartaDestaque"
+        :width="widthCartaGrande"
+      ></Carta>
     </div>
   </div>
   <div
@@ -288,6 +329,7 @@ const particleOptions = {
           v-if="adversario != null && jogo?.[adversario].cartaAtual && modelo"
           :modelo="modelo"
           :carta="cartas?.get(jogo?.[adversario].cartaAtual!)"
+          @click="cartaDestaque = cartas?.get(jogo?.[adversario].cartaAtual!) ?? null"
           :width="widthCarta"
         ></Carta>
       </div>
@@ -301,6 +343,7 @@ const particleOptions = {
         :carta="cartas?.get(jogo?.[usuario].cartaAtual!)"
         :clicar-atributo="podeJogar"
         @click-attr="jogar_atributo"
+        @click-img="cartaDestaque = cartas?.get(jogo?.[usuario].cartaAtual!) ?? null"
         :width="270"
       ></Carta>
     </div>

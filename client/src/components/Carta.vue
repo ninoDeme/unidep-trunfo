@@ -43,6 +43,7 @@ const atributos = computed(() => {
 
 const emit = defineEmits<{
   clickAttr: [id: CartaTrunfoAtributo]
+  clickImg: []
 }>()
 </script>
 
@@ -94,11 +95,13 @@ const emit = defineEmits<{
       </div>
       <img
         v-if="carta"
+        @click="emit('clickImg')"
         class="aspect-[16/7] bg-gray-500 border-white border-b-[4px] border-t-[4px] object-cover w-full"
         :src="carta?.img ?? `/uploads/carta/carta-${carta?.id_carta}.webp`"
       />
       <img
         v-else
+        @click="emit('clickImg')"
         class="aspect-[16/7] bg-gray-500 border-white border-b-[4px] border-t-[4px] w-full"
       />
       <div class="m-6 mb-3">
