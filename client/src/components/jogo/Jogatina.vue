@@ -162,7 +162,7 @@ const textoBottomTela = computed(() => {
     return 'Pressione na tela para continuar'
   }
   if (jogadorAtual.value !== null && jogadorAtual.value === adversario.value) {
-    return 'Espere o oponente vazer sua jogada'
+    return 'Espere o oponente fazer sua jogada'
   }
   return '\xa0'
 })
